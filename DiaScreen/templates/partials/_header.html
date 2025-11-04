@@ -1,0 +1,61 @@
+{% load static %}
+<header id="header">
+    <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light text-center text-light">
+                <a href="{% url 'home' %}" class="navbar-brand" id="logo">DiaScreen</a>
+                <button class="navbar-toggler ms-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto fw-medium column-gap-2">
+                        <li class="nav-item active">
+                          <a class="nav-link" href="#">Головна</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="#">Корисна інформація</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="#">Лікарі</a>
+                        </li>
+                        {% if 'Administrators' in user.groups.all|join:", " %}
+                        <li class="nav-item">
+                          <a class="nav-link" href="#">API</a>
+                        </li>
+                        {% endif %}
+                        {% if not user.is_authenticated %}
+                        <li class="nav-btn">
+                            <a href="#" class="btn btn-primary header__button" type="button">Увійти</a>
+                        </li>
+                        <li class="nav-btn">
+                          <a href="#" class="btn btn-primary header__button" type="button">Реєстрація</a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                              {% if 'Doctors' in user.groups.all|join:", " %}
+                              <a class="btn btn-primary header__button" href="#">
+                                  Профіль
+                              </a>
+                              {% elif 'Patients' in user.groups.all|join:", " %}
+                              <a class="btn btn-primary header__button" href="#">
+                                  Профіль
+                              </a>
+                              <a class="btn btn-primary header__button" href="#">
+                                  Картка
+                              </a>
+                              {% endif %}
+                        </li>
+                        {% if user.is_authenticated %}
+                        <li class="nav-btn">
+                          <form action="#" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="logout-btn">
+                              <img src="{% static 'img/svg/box-arrow-in-right.svg' %}" alt="Кнопка виходу">
+                            </button>
+                          </form>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </nav>
+        </div>
+</header>

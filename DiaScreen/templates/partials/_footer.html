@@ -1,0 +1,35 @@
+<footer id="footer">
+    <div class="container">
+        <div class="row text-light align-items-center">
+            <div class="col-md-3">
+                <h2>DiaScreen</h2>
+                <p class="fs-5">All rights reserved</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fs-4 mt-2">Навігація</h3><hr>
+                <p><a class="footer__link" href="#">Головна</a></p>
+                <p><a class="footer__link" href="#">Інформація</a></p>
+                <p><a class="footer__link" href="#">Лікарі</a></p>
+                <p><a class="footer__link" href="#">API</a></p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fs-4 mt-2">Аккаунт</h3><hr>
+                {% if user.is_authenticated %}
+                <p><a class="footer__link" href="#">Профіль</a></p>
+                {% else %}
+                <p><a class="footer__link" href="#">Логін</a></p>
+                {% endif %}
+                <p><a class="footer__link" href="#">Реєстрація пацієнта</a></p>
+                <p><a class="footer__link" href="#">Реєстрація лікаря</a></p>
+                <p><a class="footer__link" href="#">Вийти з аккаунту</a></p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fs-4 mt-2">Додатково</h3><hr>
+                <p><a class="footer__link" href="#">Політика конфіденційності</a></p>
+                <p><a class="footer__link" href="#">Відмова від відповідальності</a></p>
+                <p><a class="footer__link" href="#">Технічна підтримка</a></p>
+                <p><a class="footer__link" href="#">Карта сайту</a></p>
+            </div>
+        </div>
+    </div>
+</footer>
