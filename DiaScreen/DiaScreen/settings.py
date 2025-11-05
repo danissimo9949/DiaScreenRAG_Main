@@ -37,8 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'user_auth',
+    'user_auth.apps.AuthConfig',  # Указываем полный путь к конфигурации приложения
 ]
+
+# Использовать кастомную модель пользователя
+AUTH_USER_MODEL = 'user_auth.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -75,8 +78,12 @@ WSGI_APPLICATION = 'DiaScreen.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'DiaScreenRAG',      
+        'USER': 'postgres',         
+        'PASSWORD': 'denie9949',
+        'HOST': 'localhost',
+        'PORT': '5432',      
     }
 }
 
@@ -120,6 +127,11 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
