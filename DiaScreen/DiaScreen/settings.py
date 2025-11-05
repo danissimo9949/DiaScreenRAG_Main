@@ -37,10 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'user_auth.apps.AuthConfig',  # Указываем полный путь к конфигурации приложения
+    'user_auth.apps.AuthConfig',
 ]
 
-# Использовать кастомную модель пользователя
 AUTH_USER_MODEL = 'user_auth.User'
 
 MIDDLEWARE = [
@@ -81,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'DiaScreenRAG',      
         'USER': 'postgres',         
-        'PASSWORD': 'denie9949',
+        'PASSWORD': 'deniel9949',
         'HOST': 'localhost',
         'PORT': '5432',      
     }

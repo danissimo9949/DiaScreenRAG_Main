@@ -56,7 +56,7 @@ class Patient(models.Model):
     age = models.IntegerField(null=True, blank=True)
     blood_type = models.CharField(max_length=10, choices=[('A+', 'A+'), ('A-', 'A-'), ('B+', 'B+'), ('B-', 'B-'), ('AB+', 'AB+'), ('AB-', 'AB-'), ('O+', 'O+'), ('O-', 'O-')], null=True, blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    diabetes_type = models.CharField(max_length=10, choices=[('type1', 'Діабет 1-го типу'), ('type2', 'Діабет 2-го типу'), ('gestational', 'Гестаційний діабет')], null=True, blank=True)
+    diabetes_type = models.CharField(max_length=50, choices=[('type1', 'Діабет 1-го типу'), ('type2', 'Діабет 2-го типу'), ('gestational', 'Гестаційний діабет')], null=True, blank=True)
     sex = models.CharField(max_length=10, choices=[('male', 'Чоловік'), ('female', 'Жінка')], null=True, blank=True)
     is_on_insulin = models.BooleanField(default=False)
   
