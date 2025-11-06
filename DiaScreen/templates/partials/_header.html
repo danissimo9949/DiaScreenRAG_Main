@@ -46,7 +46,7 @@
                         </li>
                         {% if user.is_authenticated %}
                         <li class="nav-btn">
-                          <form action="#" method="post">
+                          <form action="{% url 'logout' %}" method="post">
                             {% csrf_token %}
                             <button type="submit" class="logout-btn">
                               <img src="{% static 'img/svg/box-arrow-in-right.svg' %}" alt="Кнопка виходу">

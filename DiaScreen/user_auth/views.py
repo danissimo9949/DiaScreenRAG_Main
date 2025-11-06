@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from django.contrib import messages
 from .forms import LoginForm, UserRegistrationForm
+from django.contrib.auth import logout
 
 
 def home(request):
@@ -20,7 +21,6 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            messages.success(request, f'Ласкаво просимо, {user.username}!')
             next_url = request.GET.get('next', 'home')
             return redirect(next_url)
         else:
@@ -44,7 +44,6 @@ def register_view(request):
             user = form.save()
             # Автоматично логіним користувача після реєстрації
             login(request, user)
-            messages.success(request, f'Реєстрація успішна! Ласкаво просимо, {user.username}!')
             return redirect('home')
         else:
             messages.error(request, 'Будь ласка, виправте помилки в формі.')
@@ -52,3 +51,8 @@ def register_view(request):
         form = UserRegistrationForm()
     
     return render(request, 'auth/register-form.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')
