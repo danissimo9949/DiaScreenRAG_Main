@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Карта пацієнта{% endblock %}
+
+{% block styles %}
+<style>
+    .card-section {
+        border: 2px solid rgba(13, 110, 253, 0.2);
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.05);
+    }
+
+    .card-section .card-header {
+        background: rgba(13, 110, 253, 0.05);
+        border-bottom: 1px solid rgba(13, 110, 253, 0.15);
+    }
+
+    .measurement-card {
+        background-color: #f8fafc;
+    }
+
+    .measurement-card .table thead th {
+        border-bottom-width: 1px;
+    }
+
+    .form-label {
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <h3 class="mb-0">Карта пацієнта</h3>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" href="{% url 'card:analytics' %}">Аналітика</a>
+            <a class="btn btn-outline-secondary" href="{% url 'card:doctor_report' %}">Створити звіт лікарю</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row gy-4">
+        <!-- Glucose -->
+        <div class="col-12">
+            <div class="card card-section measurement-card h-100">
+                <div class="card-header"><strong>Замір глюкози</strong></div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-4">
+                            <form method="post" class="row g-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create_glucose" />
+                                {{ glucose_form.non_field_errors }}
+                                <div class="col-12">{{ glucose_form.glucose.label_tag }} {{ glucose_form.glucose }}</div>
+                                <div class="col-12">{{ glucose_form.glucose_measurement_category.label_tag }} {{ glucose_form.glucose_measurement_category }}</div>
+                                <div class="col-md-6">{{ glucose_form.date_of_measurement.label_tag }} {{ glucose_form.date_of_measurement }}</div>
+                                <div class="col-md-6">{{ glucose_form.time_of_measurement.label_tag }} {{ glucose_form.time_of_measurement }}</div>
+                                <div class="col-12 d-flex justify-content-end"><button class="btn btn-primary">Додати</button></div>
+                            </form>
+                        </div>
+                        <div class="col-12 col-xl-8">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light"><tr><th>Дата</th><th>Час</th><th>Значення</th><th>Категорія</th><th class="text-end">Дії</th></tr></thead>
+                                    <tbody>
+                                        {% for r in glucose_list %}
+                                        <tr>
+                                            <td>{{ r.date_of_measurement }}</td>
+                                            <td>{{ r.time_of_measurement }}</td>
+                                            <td>{{ r.glucose }}</td>
+                                            <td>{{ r.glucose_measurement_category }}</td>
+                                            <td class="text-end">
+                                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'card:glucose_edit' r.pk %}">Змінити</a>
+                                                <a class="btn btn-outline-danger btn-sm" href="{% url 'card:glucose_delete' r.pk %}">Видалити</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="5" class="text-center text-muted">Записів немає</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity -->
+        <div class="col-12">
+            <div class="card card-section measurement-card h-100">
+                <div class="card-header"><strong>Фізична активність</strong></div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-4">
+                            <form method="post" class="row g-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create_activity" />
+                                {{ activity_form.non_field_errors }}
+                                <div class="col-12">{{ activity_form.type_of_activity.label_tag }} {{ activity_form.type_of_activity }}</div>
+                                <div class="col-12">{{ activity_form.number_of_approaches.label_tag }} {{ activity_form.number_of_approaches }}</div>
+                                <div class="col-md-6">{{ activity_form.date_of_measurement.label_tag }} {{ activity_form.date_of_measurement }}</div>
+                                <div class="col-md-6">{{ activity_form.time_of_activity.label_tag }} {{ activity_form.time_of_activity }}</div>
+                                <div class="col-12">{{ activity_form.commentary.label_tag }} {{ activity_form.commentary }}</div>
+                                <div class="col-12 d-flex justify-content-end"><button class="btn btn-primary">Додати</button></div>
+                            </form>
+                        </div>
+                        <div class="col-12 col-xl-8">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light"><tr><th>Дата</th><th>Час</th><th>Тип</th><th>Підходи</th><th class="text-end">Дії</th></tr></thead>
+                                    <tbody>
+                                        {% for r in activity_list %}
+                                        <tr>
+                                            <td>{{ r.date_of_measurement }}</td>
+                                            <td>{{ r.time_of_activity }}</td>
+                                            <td>{{ r.type_of_activity.name }}</td>
+                                            <td>{{ r.number_of_approaches }}</td>
+                                            <td class="text-end">
+                                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'card:activity_edit' r.pk %}">Змінити</a>
+                                                <a class="btn btn-outline-danger btn-sm" href="{% url 'card:activity_delete' r.pk %}">Видалити</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="5" class="text-center text-muted">Записів немає</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Food -->
+        <div class="col-12">
+            <div class="card card-section measurement-card h-100">
+                <div class="card-header"><strong>Прийом їжі</strong></div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-5">
+                            <form method="post" class="row g-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create_food" />
+                                {{ food_form.non_field_errors }}
+                                <div class="col-12">{{ food_form.category.label_tag }} {{ food_form.category }}</div>
+                                <div class="col-md-6">{{ food_form.date_of_measurement.label_tag }} {{ food_form.date_of_measurement }}</div>
+                                <div class="col-md-6">{{ food_form.time_of_eating.label_tag }} {{ food_form.time_of_eating }}</div>
+                                <div class="col-12">{{ food_form.insuline_dose_before.label_tag }} {{ food_form.insuline_dose_before }}</div>
+
+                                <div class="col-12" data-portions-area>
+                                    <strong class="d-block mb-2">Порції</strong>
+                                    <div class="portion-formset" data-formset>
+                                        {{ portion_formset.management_form }}
+                                        {% for f in portion_formset %}
+                                            <div class="row g-2 align-items-end mb-2" data-portion-item>
+                                                {% if f.id %}{{ f.id }}{% endif %}
+                                                {% if f.DELETE %}{{ f.DELETE }}{% endif %}
+                                                <div class="col-md-6">{{ f.food_name.label_tag }} {{ f.food_name }}</div>
+                                                <div class="col-md-3">{{ f.carbohydrates.label_tag }} {{ f.carbohydrates }}</div>
+                                                <div class="col-md-2">{{ f.grams.label_tag }} {{ f.grams }}</div>
+                                                {% if f.DELETE %}
+                                                    <div class="col-md-1">
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" data-delete-portion>×</button>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="d-none" data-empty-form>
+                                        <div class="row g-2 align-items-end mb-2" data-portion-item>
+                                            {{ portion_formset.empty_form.id }}
+                                            {{ portion_formset.empty_form.DELETE }}
+                                            <div class="col-md-6">{{ portion_formset.empty_form.food_name.label_tag }} {{ portion_formset.empty_form.food_name }}</div>
+                                            <div class="col-md-3">{{ portion_formset.empty_form.carbohydrates.label_tag }} {{ portion_formset.empty_form.carbohydrates }}</div>
+                                            <div class="col-md-2">{{ portion_formset.empty_form.grams.label_tag }} {{ portion_formset.empty_form.grams }}</div>
+                                            <div class="col-md-1">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" data-delete-portion>×</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <button type="button" class="btn btn-outline-primary" data-add-portion>+ Додати порцію</button>
+                                        <button class="btn btn-primary">Додати</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-12 col-xl-7">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light"><tr><th>Дата</th><th>Час</th><th>Категорія</th><th>ХЕ</th><th>Доза до</th><th>Доза після</th><th class="text-end">Дії</th></tr></thead>
+                                    <tbody>
+                                        {% for r in food_list %}
+                                        <tr>
+                                            <td>{{ r.date_of_measurement }}</td>
+                                            <td>{{ r.time_of_eating }}</td>
+                                            <td>{{ r.category }}</td>
+                                            <td>{{ r.bread_unit }}</td>
+                                            <td>{{ r.insuline_dose_before }}</td>
+                                            <td>{{ r.insuline_dose_after }}</td>
+                                            <td class="text-end">
+                                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'card:food_edit' r.pk %}">Змінити</a>
+                                                <a class="btn btn-outline-danger btn-sm" href="{% url 'card:food_delete' r.pk %}">Видалити</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="7" class="text-center text-muted">Записів немає</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insuline -->
+        <div class="col-12">
+            <div class="card card-section measurement-card h-100">
+                <div class="card-header"><strong>Інʼєкції інсуліну</strong></div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-4">
+                            <form method="post" class="row g-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create_insuline" />
+                                {{ insuline_form.non_field_errors }}
+                                <div class="col-12">{{ insuline_form.category.label_tag }} {{ insuline_form.category }}</div>
+                                <div class="col-md-6">{{ insuline_form.date_of_measurement.label_tag }} {{ insuline_form.date_of_measurement }}</div>
+                                <div class="col-md-6">{{ insuline_form.time.label_tag }} {{ insuline_form.time }}</div>
+                                <div class="col-12">{{ insuline_form.insuline_dose.label_tag }} {{ insuline_form.insuline_dose }}</div>
+                                <div class="col-12 d-flex justify-content-end"><button class="btn btn-primary">Додати</button></div>
+                            </form>
+                        </div>
+                        <div class="col-12 col-xl-8">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light"><tr><th>Дата</th><th>Час</th><th>Категорія</th><th>Доза</th><th class="text-end">Дії</th></tr></thead>
+                                    <tbody>
+                                        {% for r in insuline_list %}
+                                        <tr>
+                                            <td>{{ r.date_of_measurement }}</td>
+                                            <td>{{ r.time }}</td>
+                                            <td>{{ r.category }}</td>
+                                            <td>{{ r.insuline_dose }}</td>
+                                            <td class="text-end">
+                                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'card:insuline_edit' r.pk %}">Змінити</a>
+                                                <a class="btn btn-outline-danger btn-sm" href="{% url 'card:insuline_delete' r.pk %}">Видалити</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="5" class="text-center text-muted">Записів немає</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('[data-portions-area]').forEach(function (area) {
+    const addBtn = area.querySelector('[data-add-portion]');
+    const formsetContainer = area.querySelector('[data-formset]');
+    const emptyTemplate = area.querySelector('[data-empty-form]');
+    const totalFormsInput = area.querySelector('input[id$="-TOTAL_FORMS"]');
+
+    if (!addBtn || !formsetContainer || !emptyTemplate || !totalFormsInput) {
+      return;
+    }
+
+    addBtn.addEventListener('click', function () {
+      const currentCount = parseInt(totalFormsInput.value || '0', 10);
+      let formHtml = emptyTemplate.innerHTML.replace(/__prefix__/g, currentCount);
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = formHtml.trim();
+      const newForm = wrapper.firstElementChild;
+      if (newForm) {
+        formsetContainer.appendChild(newForm);
+        totalFormsInput.value = currentCount + 1;
+      }
+    });
+
+    formsetContainer.addEventListener('click', function (e) {
+      if (e.target && e.target.hasAttribute('data-delete-portion')) {
+        const portionItem = e.target.closest('[data-portion-item]');
+        if (portionItem) {
+          const deleteCheckbox = portionItem.querySelector('input[type="checkbox"][id$="-DELETE"]');
+          if (deleteCheckbox) {
+            deleteCheckbox.checked = true;
+            portionItem.style.opacity = '0.5';
+            portionItem.style.pointerEvents = 'none';
+            e.target.disabled = true;
+            e.target.textContent = '✓';
+          } else {
+            portionItem.remove();
+            const currentCount = parseInt(totalFormsInput.value || '0', 10);
+            totalFormsInput.value = Math.max(0, currentCount - 1);
+          }
+        }
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
+
+

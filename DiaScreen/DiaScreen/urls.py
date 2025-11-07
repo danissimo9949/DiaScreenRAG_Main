@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include('user_auth.urls')),
     path('blog/', include('blog.urls')),
     path('chatAI/', include('chatAI.urls')),
+    path('card/', include('card.urls')),
 ]
 
 if settings.DEBUG:

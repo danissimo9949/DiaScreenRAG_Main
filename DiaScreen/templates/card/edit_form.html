@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Редагування{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h4 class="mb-3">Редагування</h4>
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div>
+      <button class="btn btn-primary">Зберегти</button>
+      <a class="btn btn-outline-secondary" href="{% url 'card:patient_card' %}">Скасувати</a>
+    </div>
+  </form>
+  {% if portion_formset %}
+  <hr>
+  <h5>Порції</h5>
+  <form method="post" class="row g-2">
+    {% csrf_token %}
+    {{ portion_formset.management_form }}
+    {% for f in portion_formset %}
+      <div class="col-12">
+        {{ f.as_p }}
+      </div>
+    {% endfor %}
+    <div>
+      <button class="btn btn-primary">Зберегти порції</button>
+    </div>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+
+

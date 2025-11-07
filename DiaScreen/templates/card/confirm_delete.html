@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Підтвердження видалення{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h4 class="mb-3">Видалити запис?</h4>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger">Видалити</button>
+    <a class="btn btn-outline-secondary" href="{% url 'card:patient_card' %}">Скасувати</a>
+  </form>
+</div>
+{% endblock %}
+
+
