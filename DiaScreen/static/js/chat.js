@@ -108,7 +108,7 @@ let currentSessionId = null;
                         item.innerHTML = `
                             <div class="d-flex justify-content-between align-items-start gap-2">
                                 <div class="flex-grow-1" role="button" onclick="loadChat('${session.session_id}')">
-                                    <div class="history-item-title text-truncate">${escapeHtml(session.summary || 'Новий діалог')}</div>
+                                    <div class="history-item-title text-truncate" title="${escapeHtml(session.summary || 'Новий діалог')}">${escapeHtml(session.summary || 'Новий діалог')}</div>
                                     <div class="history-item-date small text-muted">${session.updated_at}</div>
                                 </div>
                                 <div class="history-item-actions d-flex align-items-center gap-2">
@@ -171,20 +171,34 @@ let currentSessionId = null;
 
             const data = await response.json();
 
+            hideTypingIndicator();
+
             if (data.success) {
                 currentSessionId = data.session_id;
-                hideTypingIndicator();
 
-                addMessageToUI(
-                    'Це приклад відповіді від ШІ-асистента. Після підключення бэкенду тут будуть реальні відповіді на ваші питання про діабет та управління хворобою.',
-                    'assistant',
-                    getCurrentTime(),
-                    'completed'
-                );
+                if (data.assistant_message) {
+                    const assistant = data.assistant_message;
+                    addMessageToUI(
+                        assistant.message_text,
+                        'assistant',
+                        assistant.created_at || getCurrentTime(),
+                        assistant.status || 'completed'
+                    );
+
+                    if (assistant.status === 'error' && assistant.error_message) {
+                        alert('Помилка сервісу: ' + assistant.error_message);
+                    }
+                } else {
+                    addMessageToUI(
+                        'Вибачте, сервіс повернув порожню відповідь.',
+                        'assistant',
+                        getCurrentTime(),
+                        'error'
+                    );
+                }
 
                 loadSessions();
             } else {
-                hideTypingIndicator();
                 alert('Помилка: ' + (data.error || 'Невідома помилка'));
             }
         } catch (error) {

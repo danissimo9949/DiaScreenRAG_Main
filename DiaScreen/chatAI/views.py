@@ -3,7 +3,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.conf import settings
 import json
+import requests
 
 from .models import AISession, AIMessage
 
@@ -65,25 +67,23 @@ def send_message(request):
         if not message_text:
             return JsonResponse({'success': False, 'error': 'Повідомлення не може бути порожнім'}, status=400)
         
-        # Получаем или создаем сессию
         if session_id:
             try:
                 session = AISession.objects.get(pk=session_id, user=request.user)
             except AISession.DoesNotExist:
                 return JsonResponse({'success': False, 'error': 'Сесію не знайдено'}, status=404)
         else:
-            # Создаем новую сессию и записываем summary как первые слова сообщения
             session = AISession.objects.create(
                 user=request.user,
                 summary=message_text[:200]
             )
         
-        # Обновляем summary, если оно ещё пустое
-        if not session.summary:
+        default_summaries = {'новий діалог', 'новий чат', 'new chat', 'new dialog'}
+        current_summary = (session.summary or '').strip()
+        if not current_summary or current_summary.lower() in default_summaries:
             session.summary = message_text[:200]
             session.save(update_fields=['summary'])
 
-        # Сохраняем сообщение пользователя
         user_message = AIMessage.objects.create(
             session=session,
             sender='user',
@@ -91,13 +91,38 @@ def send_message(request):
             status='completed'
         )
         
-        # Создаем сообщение-заглушку для AI (позже обновится)
         ai_message = AIMessage.objects.create(
             session=session,
             sender='assistant',
             message_text='',
             status='pending'
         )
+
+        rag_url = getattr(settings, 'RAG_API_URL', 'http://127.0.0.1:8001/get-response')
+
+        try:
+            response = requests.get(
+                rag_url,
+                params={'question': message_text},
+                timeout=15
+            )
+            response.raise_for_status()
+            data = response.json()
+            answer_text = (data.get('answer') or '').strip()
+
+            if not answer_text:
+                answer_text = 'Вибачте, сервіс не надав відповіді.'
+
+            ai_message.message_text = answer_text
+            ai_message.status = 'completed'
+            ai_message.save(update_fields=['message_text', 'status'])
+        except (requests.RequestException, ValueError) as exc:
+            ai_message.message_text = 'Вибачте, зараз я не можу відповісти. Спробуйте трохи пізніше.'
+            ai_message.status = 'error'
+            ai_message.error_message = str(exc)
+            ai_message.save(update_fields=['message_text', 'status', 'error_message'])
+
+        ai_message.refresh_from_db()
         
         return JsonResponse({
             'success': True,
@@ -108,7 +133,14 @@ def send_message(request):
                 'message_text': user_message.message_text,
                 'created_at': user_message.created_at.strftime('%H:%M'),
             },
-            'ai_message_id': ai_message.message_id,
+            'assistant_message': {
+                'message_id': ai_message.message_id,
+                'sender': 'assistant',
+                'message_text': ai_message.message_text,
+                'created_at': ai_message.created_at.strftime('%H:%M'),
+                'status': ai_message.status,
+                'error_message': ai_message.error_message or '',
+            },
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -119,8 +151,12 @@ def send_message(request):
 def create_session(request):
     """Создать новую сессию"""
     try:
-        data = json.loads(request.body)
-        summary = data.get('summary', 'Новий діалог')
+        raw_body = request.body.decode('utf-8').strip()
+        try:
+            data = json.loads(raw_body) if raw_body else {}
+        except json.JSONDecodeError:
+            data = {}
+        summary = data.get('summary') or 'Новий діалог'
     
         session = AISession.objects.create(
             user=request.user,

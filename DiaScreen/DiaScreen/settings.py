@@ -21,6 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-)h!-te3)iuvevp_4pg@!dj9g^=k=qzg8#3q#)5^9w8)7@l9qx%'
+RAG_API_URL = "http://127.0.0.1:8001/get-response"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

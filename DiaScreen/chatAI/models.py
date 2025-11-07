@@ -56,7 +56,9 @@ class AISession(models.Model):
 
     def update_summary_from_first_message(self):
         first_message = self.messages.filter(sender='user').first()
-        if first_message and not self.summary:
+        default_summaries = {'новий діалог', 'новий чат', 'new chat', 'new dialog'}
+        current_summary = (self.summary or '').strip()
+        if first_message and (not current_summary or current_summary.lower() in default_summaries):
             self.summary = first_message.message_text[:200]
             self.save(update_fields=['summary'])
 
@@ -165,5 +167,7 @@ class AIMessage(models.Model):
         super().save(*args, **kwargs)
         AISession.objects.filter(pk=self.session.session_id).update(updated_at=timezone.now())
         
-        if self.sender == 'user' and not self.session.summary:
+        default_summaries = {'новий діалог', 'новий чат', 'new chat', 'new dialog'}
+        session_summary = (self.session.summary or '').strip()
+        if self.sender == 'user' and (not session_summary or session_summary.lower() in default_summaries):
             self.session.update_summary_from_first_message()
