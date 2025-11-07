@@ -12,7 +12,7 @@
                           <a class="nav-link" href="#">Головна</a>
                         </li>
                         <li class="nav-item">
-                          <a class="nav-link" href="#">Корисна інформація</a>
+                          <a class="nav-link" href="{% url 'information' %}">Корисна інформація</a>
                         </li>
                         <li class="nav-item">
                           <a class="nav-link" href="#">Лікарі</a>
@@ -24,10 +24,10 @@
                         {% endif %}
                         {% if not user.is_authenticated %}
                         <li class="nav-btn">
-                            <a href="#" class="btn btn-primary header__button" type="button">Увійти</a>
+                            <a href="{% url 'login' %}" class="btn btn-primary header__button" type="button">Увійти</a>
                         </li>
                         <li class="nav-btn">
-                          <a href="#" class="btn btn-primary header__button" type="button">Реєстрація</a>
+                          <a href="{% url 'register' %}" class="btn btn-primary header__button" type="button">Реєстрація</a>
                         </li>
                         {% endif %}
                         <li class="nav-item">

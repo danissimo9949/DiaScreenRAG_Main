@@ -76,7 +76,6 @@ class Patient(models.Model):
         if self.diabetes_type == 'type1':
             self.is_on_insulin = True
         elif self.diabetes_type:
-            # Если тип диабета установлен, но не type1, можно оставить False или установить в зависимости от логики
             pass
         return self.is_on_insulin
 

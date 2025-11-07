@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Корисна інформація - DiaScreen{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold mb-3">Корисна інформація</h1>
+            <p class="lead text-muted">Статті та корисні матеріали про діабет та його управління</p>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if is_admin %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createArticleModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle me-2" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                Створити нову статтю
+            </button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="createArticleModal" tabindex="-1" aria-labelledby="createArticleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createArticleModalLabel">Створити нову статтю</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="{{ article_creation_form.article_name.id_for_label }}" class="form-label">Назва статті *</label>
+                            {{ article_creation_form.article_name }}
+                            {% if article_creation_form.article_name.errors %}
+                                <div class="text-danger">{{ article_creation_form.article_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ article_creation_form.article_short_name.id_for_label }}" class="form-label">Коротка назва</label>
+                            {{ article_creation_form.article_short_name }}
+                            {% if article_creation_form.article_short_name.errors %}
+                                <div class="text-danger">{{ article_creation_form.article_short_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ article_creation_form.article_author.id_for_label }}" class="form-label">Автор</label>
+                            {{ article_creation_form.article_author }}
+                            {% if article_creation_form.article_author.errors %}
+                                <div class="text-danger">{{ article_creation_form.article_author.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ article_creation_form.article_description.id_for_label }}" class="form-label">Опис</label>
+                            {{ article_creation_form.article_description }}
+                            {% if article_creation_form.article_description.errors %}
+                                <div class="text-danger">{{ article_creation_form.article_description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ article_creation_form.article_img.id_for_label }}" class="form-label">Зображення *</label>
+                            {{ article_creation_form.article_img }}
+                            {% if article_creation_form.article_img.errors %}
+                                <div class="text-danger">{{ article_creation_form.article_img.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ article_creation_form.article_text.id_for_label }}" class="form-label">Текст статті *</label>
+                            {{ article_creation_form.article_text }}
+                            {% if article_creation_form.article_text.errors %}
+                                <div class="text-danger">{{ article_creation_form.article_text.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                        <button type="submit" class="btn btn-primary">Створити статтю</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if article_list %}
+    <div class="row g-4">
+        {% for article in article_list %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                {% if article.article_img %}
+                <img src="{{ article.article_img.url }}" class="card-img-top" alt="{{ article.article_name }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="white" class="bi bi-image" viewBox="0 0 16 16">
+                        <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                        <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
+                    </svg>
+                </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ article.article_name }}</h5>
+                    {% if article.article_description %}
+                    <p class="card-text text-muted flex-grow-1">{{ article.article_description|truncatewords:20 }}</p>
+                    {% endif %}
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar3 me-1" viewBox="0 0 16 16">
+                                    <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
+                                    <path d="M12 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                                </svg>
+                                {{ article.date_of_creation|date:"d.m.Y" }}
+                            </small>
+                            {% if article.article_author %}
+                            <small class="text-muted">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person me-1" viewBox="0 0 16 16">
+                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                                </svg>
+                                {{ article.article_author }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'article_detail' article.pk %}" class="btn btn-primary w-100">Читати далі</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav aria-label="Навігація по сторінкам" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">Перша</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Попередня</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Перша</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Попередня</span>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Наступна</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Остання</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Наступна</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Остання</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">Статті відсутні</h4>
+                <p>Наразі немає доступних статей. Зайдіть пізніше.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    }
+
+    .card-img-top {
+        border-radius: 0.375rem 0.375rem 0 0;
+    }
+
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+{% if form_errors %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = new bootstrap.Modal(document.getElementById('createArticleModal'));
+        modal.show();
+    });
+</script>
+{% endif %}
+{% endblock %}
+
