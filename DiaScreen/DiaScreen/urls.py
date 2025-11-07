@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('user_auth.urls')),
     path('blog/', include('blog.urls')),
+    path('chatAI/', include('chatAI.urls')),
 ]
 
 if settings.DEBUG:

@@ -33,7 +33,6 @@ class InformationPanel(generic.ListView, AdminRoleMixin):
             return redirect('information')
         else:
             messages.error(request, 'Помилка при створенні статті. Перевірте форму.')
-            # Передаем форму с ошибками в контекст
             context = self.get_context_data(**kwargs)
             context['article_creation_form'] = article_form
             context['form_errors'] = True
@@ -61,7 +60,6 @@ class ArticleDetails(generic.DetailView, AdminRoleMixin):
 
 @require_POST
 def delete_article(request, article_id):
-    # Проверяем права администратора
     user = request.user
     is_admin = user.groups.filter(name='Administrators').exists()
     if not is_admin:
@@ -74,7 +72,6 @@ def delete_article(request, article_id):
 
 
 def edit_article(request, article_id):
-    # Проверяем права администратора
     user = request.user
     is_admin = user.groups.filter(name='Administrators').exists()
     if not is_admin:

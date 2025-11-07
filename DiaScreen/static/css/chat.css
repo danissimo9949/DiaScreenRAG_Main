@@ -1,0 +1,90 @@
+body {
+    background-color: #f8f9fa;
+}
+
+main {
+    min-height: 100vh;
+}
+
+.chat-container {
+    height: calc(100vh - 120px);
+}
+
+@media (max-width: 991.98px) {
+    main {
+        min-height: calc(100vh - 180px);
+    }
+
+    .chat-container {
+        height: auto;
+        min-height: calc(100vh - 180px);
+    }
+}
+
+.chat-history-card,
+.chat-panel-card {
+    height: 100%;
+}
+
+.chat-history-card .history-list {
+    overflow-y: auto;
+}
+
+.chat-messages {
+    overflow-y: auto;
+}
+
+.message-avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+}
+
+.message-body {
+    max-width: 75%;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+}
+
+.history-item.active {
+    border-color: var(--bs-primary);
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.history-item-title {
+    font-weight: 600;
+}
+
+.chat-input textarea {
+    resize: none;
+    max-height: 12rem;
+}
+
+.typing-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--bs-secondary);
+    animation: typing 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing {
+    0%, 60%, 100% {
+        opacity: 0.3;
+    }
+
+    30% {
+        opacity: 1;
+    }
+}
