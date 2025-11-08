@@ -5,26 +5,87 @@
 
 {% block styles %}
 <style>
-    .card-section {
-        border: 2px solid rgba(13, 110, 253, 0.2);
-        border-radius: 1rem;
-        box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.05);
+    .form-label {
+        font-weight: 600;
     }
 
-    .card-section .card-header {
-        background: rgba(13, 110, 253, 0.05);
-        border-bottom: 1px solid rgba(13, 110, 253, 0.15);
+    .stat-card {
+        border-radius: 1rem;
+        background: linear-gradient(135deg, rgba(13, 110, 253, 0.12), rgba(13, 110, 253, 0.02));
+        border: 1px solid rgba(13, 110, 253, 0.15);
+        box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.08);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::after {
+        content: "";
+        position: absolute;
+        top: -30%;
+        right: -10%;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(13, 110, 253, 0.25) 0%, rgba(13, 110, 253, 0) 60%);
+        transform: rotate(25deg);
+        opacity: 0.8;
+    }
+
+    .stat-card small {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+        color: rgba(30, 58, 138, 0.7);
+    }
+
+    .stat-card h4 {
+        font-weight: 700;
+        color: #0b2e59;
+    }
+
+    .stat-card .stat-trend {
+        font-size: 0.9rem;
+        color: rgba(30, 64, 175, 0.8);
     }
 
     .measurement-card {
-        background-color: #f8fafc;
+        border-radius: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.08);
+        background: #f8fafc;
     }
 
-    .measurement-card .table thead th {
-        border-bottom-width: 1px;
+    .measurement-card .card-header {
+        background: rgba(15, 23, 42, 0.04);
+        border-bottom: none;
+        font-weight: 600;
     }
 
-    .form-label {
+    .section-tabs .nav-link {
+        border: none;
+        border-radius: 999px;
+        padding: 0.5rem 1.25rem;
+        transition: all 0.2s ease;
+        color: rgba(15, 23, 42, 0.6);
+    }
+
+    .section-tabs .nav-link.active {
+        background: rgba(13, 110, 253, 0.12);
+        color: #0d6efd;
+        font-weight: 600;
+        box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.12);
+    }
+
+    .table thead th {
+        font-weight: 600;
+    }
+
+    .badge-soft {
+        background: rgba(13, 110, 253, 0.15);
+        color: #0d6efd;
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
         font-weight: 600;
     }
 </style>
@@ -46,11 +107,180 @@
         {% endfor %}
     {% endif %}
 
-    <div class="row gy-4">
-        <!-- Glucose -->
-        <div class="col-12">
-            <div class="card card-section measurement-card h-100">
-                <div class="card-header"><strong>Замір глюкози</strong></div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
+        <div class="col">
+            <div class="p-4 stat-card">
+                <small>Глікемічний профіль</small>
+                {% if glycemic_latest %}
+                    <h4 class="mt-2 mb-1">{{ glycemic_latest.average_glucose }} ммоль/л</h4>
+                    <div class="stat-trend">
+                        HbA1c: {{ glycemic_latest.hba1c }}%
+                        <span class="ms-2 badge-soft">{{ glycemic_latest.measurement_date }}</span>
+                    </div>
+                {% else %}
+                    <p class="mt-2 text-muted mb-0">Ще немає записів. Додайте перший показник.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col">
+            <div class="p-4 stat-card">
+                <small>Антропометрія</small>
+                {% if anthropometry_latest %}
+                    <h4 class="mt-2 mb-1">{{ anthropometry_latest.weight }} кг</h4>
+                    <div class="stat-trend">
+                        ІМТ: {{ anthropometry_latest.bmi }}
+                        <span class="ms-2 badge-soft">{{ anthropometry_latest.measurement_date }}</span>
+                    </div>
+                {% else %}
+                    <p class="mt-2 text-muted mb-0">Слідкуйте за вагою та ІМТ, додаючи виміри.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col">
+            <div class="p-4 stat-card">
+                <small>Останній замір глюкози</small>
+                {% if glucose_latest %}
+                    <h4 class="mt-2 mb-1">{{ glucose_latest.glucose }} ммоль/л</h4>
+                    <div class="stat-trend">
+                        {{ glucose_latest.date_of_measurement }} · {{ glucose_latest.time_of_measurement }}
+                    </div>
+                {% else %}
+                    <p class="mt-2 text-muted mb-0">Додавайте щоденні заміри для відстеження тенденцій.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav nav-pills section-tabs flex-wrap mb-4" id="cardSections" role="tablist">
+            <button class="nav-link active" id="nav-glycemic-tab" data-bs-toggle="tab" data-bs-target="#nav-glycemic" type="button" role="tab">Глікемія</button>
+            <button class="nav-link" id="nav-anthropometry-tab" data-bs-toggle="tab" data-bs-target="#nav-anthropometry" type="button" role="tab">Антропометрія</button>
+            <button class="nav-link" id="nav-glucose-tab" data-bs-toggle="tab" data-bs-target="#nav-glucose" type="button" role="tab">Глюкоза</button>
+            <button class="nav-link" id="nav-food-tab" data-bs-toggle="tab" data-bs-target="#nav-food" type="button" role="tab">Харчування</button>
+            <button class="nav-link" id="nav-insuline-tab" data-bs-toggle="tab" data-bs-target="#nav-insuline" type="button" role="tab">Інсулін</button>
+            <button class="nav-link" id="nav-activity-tab" data-bs-toggle="tab" data-bs-target="#nav-activity" type="button" role="tab">Активність</button>
+        </div>
+    </nav>
+
+    <div class="tab-content" id="cardSectionsContent">
+        <div class="tab-pane fade show active" id="nav-glycemic" role="tabpanel" aria-labelledby="nav-glycemic-tab">
+            <div class="card measurement-card mb-4">
+                <div class="card-header">Глікемічний профіль (СКГ, HbA1c)</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-4">
+                            <form method="post" class="row g-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create_glycemic_profile" />
+                                {{ glycemic_form.non_field_errors }}
+                                <div class="col-md-6">{{ glycemic_form.measurement_date.label_tag }} {{ glycemic_form.measurement_date }}</div>
+                                <div class="col-md-6">{{ glycemic_form.measurement_time.label_tag }} {{ glycemic_form.measurement_time }}</div>
+                                <div class="col-md-6">{{ glycemic_form.average_glucose.label_tag }} {{ glycemic_form.average_glucose }}</div>
+                                <div class="col-md-6">{{ glycemic_form.hba1c.label_tag }} {{ glycemic_form.hba1c }}</div>
+                                <div class="col-md-6">{{ glycemic_form.hypoglycemic_events.label_tag }} {{ glycemic_form.hypoglycemic_events }}</div>
+                                <div class="col-md-6">{{ glycemic_form.hyperglycemic_events.label_tag }} {{ glycemic_form.hyperglycemic_events }}</div>
+                                <div class="col-12 d-flex justify-content-end">
+                                    <button class="btn btn-primary">Зберегти</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-12 col-xl-8">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Дата</th>
+                                            <th>Час</th>
+                                            <th>Сер. глюкоза</th>
+                                            <th>HbA1c</th>
+                                            <th>Гіпо</th>
+                                            <th>Гіпер</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for r in glycemic_list %}
+                                        <tr>
+                                            <td>{{ r.measurement_date }}</td>
+                                            <td>{{ r.measurement_time }}</td>
+                                            <td>{{ r.average_glucose }}</td>
+                                            <td>{{ r.hba1c }}</td>
+                                            <td>{{ r.hypoglycemic_events }}</td>
+                                            <td>{{ r.hyperglycemic_events }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="6" class="text-center text-muted">Записів ще немає</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="nav-anthropometry" role="tabpanel" aria-labelledby="nav-anthropometry-tab">
+            <div class="card measurement-card mb-4">
+                <div class="card-header">Антропометричні показники</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-4">
+                            <form method="post" class="row g-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create_anthropometry" />
+                                {{ anthropometry_form.non_field_errors }}
+                                <div class="col-md-6">{{ anthropometry_form.measurement_date.label_tag }} {{ anthropometry_form.measurement_date }}</div>
+                                <div class="col-md-6">{{ anthropometry_form.measurement_time.label_tag }} {{ anthropometry_form.measurement_time }}</div>
+                                <div class="col-md-6">{{ anthropometry_form.weight.label_tag }} {{ anthropometry_form.weight }}</div>
+                                <div class="col-md-6">{{ anthropometry_form.bmi.label_tag }} {{ anthropometry_form.bmi }}</div>
+                                <div class="col-md-6">{{ anthropometry_form.waist_circumference.label_tag }} {{ anthropometry_form.waist_circumference }}</div>
+                                <div class="col-md-6">{{ anthropometry_form.hip_circumference.label_tag }} {{ anthropometry_form.hip_circumference }}</div>
+                                <div class="col-12">{{ anthropometry_form.notes.label_tag }} {{ anthropometry_form.notes }}</div>
+                                <div class="col-12 d-flex justify-content-end">
+                                    <button class="btn btn-primary">Зберегти</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-12 col-xl-8">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Дата</th>
+                                            <th>Час</th>
+                                            <th>Вага</th>
+                                            <th>ІМТ</th>
+                                            <th>Талія</th>
+                                            <th>Стегна</th>
+                                            <th>Примітки</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for r in anthropometry_list %}
+                                        <tr>
+                                            <td>{{ r.measurement_date }}</td>
+                                            <td>{{ r.measurement_time }}</td>
+                                            <td>{{ r.weight }}</td>
+                                            <td>{{ r.bmi }}</td>
+                                            <td>{{ r.waist_circumference }}</td>
+                                            <td>{{ r.hip_circumference }}</td>
+                                            <td>{{ r.notes|default:"—" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="7" class="text-center text-muted">Додайте перший антропометричний запис</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="nav-glucose" role="tabpanel" aria-labelledby="nav-glucose-tab">
+            <div class="card measurement-card mb-4">
+                <div class="card-header">Щоденні заміри глюкози</div>
                 <div class="card-body">
                     <div class="row g-4">
                         <div class="col-12 col-xl-4">
@@ -58,10 +288,10 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="create_glucose" />
                                 {{ glucose_form.non_field_errors }}
-                                <div class="col-12">{{ glucose_form.glucose.label_tag }} {{ glucose_form.glucose }}</div>
-                                <div class="col-12">{{ glucose_form.glucose_measurement_category.label_tag }} {{ glucose_form.glucose_measurement_category }}</div>
                                 <div class="col-md-6">{{ glucose_form.date_of_measurement.label_tag }} {{ glucose_form.date_of_measurement }}</div>
                                 <div class="col-md-6">{{ glucose_form.time_of_measurement.label_tag }} {{ glucose_form.time_of_measurement }}</div>
+                                <div class="col-12">{{ glucose_form.glucose.label_tag }} {{ glucose_form.glucose }}</div>
+                                <div class="col-12">{{ glucose_form.glucose_measurement_category.label_tag }} {{ glucose_form.glucose_measurement_category }}</div>
                                 <div class="col-12 d-flex justify-content-end"><button class="btn btn-primary">Додати</button></div>
                             </form>
                         </div>
@@ -93,57 +323,9 @@
             </div>
         </div>
 
-        <!-- Activity -->
-        <div class="col-12">
-            <div class="card card-section measurement-card h-100">
-                <div class="card-header"><strong>Фізична активність</strong></div>
-                <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-12 col-xl-4">
-                            <form method="post" class="row g-3">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="create_activity" />
-                                {{ activity_form.non_field_errors }}
-                                <div class="col-12">{{ activity_form.type_of_activity.label_tag }} {{ activity_form.type_of_activity }}</div>
-                                <div class="col-12">{{ activity_form.number_of_approaches.label_tag }} {{ activity_form.number_of_approaches }}</div>
-                                <div class="col-md-6">{{ activity_form.date_of_measurement.label_tag }} {{ activity_form.date_of_measurement }}</div>
-                                <div class="col-md-6">{{ activity_form.time_of_activity.label_tag }} {{ activity_form.time_of_activity }}</div>
-                                <div class="col-12">{{ activity_form.commentary.label_tag }} {{ activity_form.commentary }}</div>
-                                <div class="col-12 d-flex justify-content-end"><button class="btn btn-primary">Додати</button></div>
-                            </form>
-                        </div>
-                        <div class="col-12 col-xl-8">
-                            <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead class="table-light"><tr><th>Дата</th><th>Час</th><th>Тип</th><th>Підходи</th><th class="text-end">Дії</th></tr></thead>
-                                    <tbody>
-                                        {% for r in activity_list %}
-                                        <tr>
-                                            <td>{{ r.date_of_measurement }}</td>
-                                            <td>{{ r.time_of_activity }}</td>
-                                            <td>{{ r.type_of_activity.name }}</td>
-                                            <td>{{ r.number_of_approaches }}</td>
-                                            <td class="text-end">
-                                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'card:activity_edit' r.pk %}">Змінити</a>
-                                                <a class="btn btn-outline-danger btn-sm" href="{% url 'card:activity_delete' r.pk %}">Видалити</a>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr><td colspan="5" class="text-center text-muted">Записів немає</td></tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Food -->
-        <div class="col-12">
-            <div class="card card-section measurement-card h-100">
-                <div class="card-header"><strong>Прийом їжі</strong></div>
+        <div class="tab-pane fade" id="nav-food" role="tabpanel" aria-labelledby="nav-food-tab">
+            <div class="card measurement-card mb-4">
+                <div class="card-header">Харчування та ХЕ</div>
                 <div class="card-body">
                     <div class="row g-4">
                         <div class="col-12 col-xl-5">
@@ -151,9 +333,9 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="create_food" />
                                 {{ food_form.non_field_errors }}
-                                <div class="col-12">{{ food_form.category.label_tag }} {{ food_form.category }}</div>
                                 <div class="col-md-6">{{ food_form.date_of_measurement.label_tag }} {{ food_form.date_of_measurement }}</div>
                                 <div class="col-md-6">{{ food_form.time_of_eating.label_tag }} {{ food_form.time_of_eating }}</div>
+                                <div class="col-12">{{ food_form.category.label_tag }} {{ food_form.category }}</div>
                                 <div class="col-12">{{ food_form.insuline_dose_before.label_tag }} {{ food_form.insuline_dose_before }}</div>
 
                                 <div class="col-12" data-portions-area>
@@ -164,11 +346,11 @@
                                             <div class="row g-2 align-items-end mb-2" data-portion-item>
                                                 {% if f.id %}{{ f.id }}{% endif %}
                                                 {% if f.DELETE %}{{ f.DELETE }}{% endif %}
-                                                <div class="col-md-6">{{ f.food_name.label_tag }} {{ f.food_name }}</div>
-                                                <div class="col-md-3">{{ f.carbohydrates.label_tag }} {{ f.carbohydrates }}</div>
-                                                <div class="col-md-2">{{ f.grams.label_tag }} {{ f.grams }}</div>
+                                                <div class="col-lg-6">{{ f.food_name.label_tag }} {{ f.food_name }}</div>
+                                                <div class="col-lg-3">{{ f.carbohydrates.label_tag }} {{ f.carbohydrates }}</div>
+                                                <div class="col-lg-2">{{ f.grams.label_tag }} {{ f.grams }}</div>
                                                 {% if f.DELETE %}
-                                                    <div class="col-md-1">
+                                                    <div class="col-lg-1">
                                                         <button type="button" class="btn btn-outline-danger btn-sm" data-delete-portion>×</button>
                                                     </div>
                                                 {% endif %}
@@ -179,17 +361,17 @@
                                         <div class="row g-2 align-items-end mb-2" data-portion-item>
                                             {{ portion_formset.empty_form.id }}
                                             {{ portion_formset.empty_form.DELETE }}
-                                            <div class="col-md-6">{{ portion_formset.empty_form.food_name.label_tag }} {{ portion_formset.empty_form.food_name }}</div>
-                                            <div class="col-md-3">{{ portion_formset.empty_form.carbohydrates.label_tag }} {{ portion_formset.empty_form.carbohydrates }}</div>
-                                            <div class="col-md-2">{{ portion_formset.empty_form.grams.label_tag }} {{ portion_formset.empty_form.grams }}</div>
-                                            <div class="col-md-1">
+                                            <div class="col-lg-6">{{ portion_formset.empty_form.food_name.label_tag }} {{ portion_formset.empty_form.food_name }}</div>
+                                            <div class="col-lg-3">{{ portion_formset.empty_form.carbohydrates.label_tag }} {{ portion_formset.empty_form.carbohydrates }}</div>
+                                            <div class="col-lg-2">{{ portion_formset.empty_form.grams.label_tag }} {{ portion_formset.empty_form.grams }}</div>
+                                            <div class="col-lg-1">
                                                 <button type="button" class="btn btn-outline-danger btn-sm" data-delete-portion>×</button>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-2">
                                         <button type="button" class="btn btn-outline-primary" data-add-portion>+ Додати порцію</button>
-                                        <button class="btn btn-primary">Додати</button>
+                                        <button class="btn btn-primary">Зберегти</button>
                                     </div>
                                 </div>
                             </form>
@@ -224,10 +406,9 @@
             </div>
         </div>
 
-        <!-- Insuline -->
-        <div class="col-12">
-            <div class="card card-section measurement-card h-100">
-                <div class="card-header"><strong>Інʼєкції інсуліну</strong></div>
+        <div class="tab-pane fade" id="nav-insuline" role="tabpanel" aria-labelledby="nav-insuline-tab">
+            <div class="card measurement-card mb-4">
+                <div class="card-header">Інʼєкції інсуліну</div>
                 <div class="card-body">
                     <div class="row g-4">
                         <div class="col-12 col-xl-4">
@@ -235,9 +416,9 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="create_insuline" />
                                 {{ insuline_form.non_field_errors }}
-                                <div class="col-12">{{ insuline_form.category.label_tag }} {{ insuline_form.category }}</div>
                                 <div class="col-md-6">{{ insuline_form.date_of_measurement.label_tag }} {{ insuline_form.date_of_measurement }}</div>
                                 <div class="col-md-6">{{ insuline_form.time.label_tag }} {{ insuline_form.time }}</div>
+                                <div class="col-12">{{ insuline_form.category.label_tag }} {{ insuline_form.category }}</div>
                                 <div class="col-12">{{ insuline_form.insuline_dose.label_tag }} {{ insuline_form.insuline_dose }}</div>
                                 <div class="col-12 d-flex justify-content-end"><button class="btn btn-primary">Додати</button></div>
                             </form>
@@ -256,6 +437,52 @@
                                             <td class="text-end">
                                                 <a class="btn btn-outline-secondary btn-sm" href="{% url 'card:insuline_edit' r.pk %}">Змінити</a>
                                                 <a class="btn btn-outline-danger btn-sm" href="{% url 'card:insuline_delete' r.pk %}">Видалити</a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr><td colspan="5" class="text-center text-muted">Записів немає</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="nav-activity" role="tabpanel" aria-labelledby="nav-activity-tab">
+            <div class="card measurement-card mb-4">
+                <div class="card-header">Фізична активність</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-xl-4">
+                            <form method="post" class="row g-3">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create_activity" />
+                                {{ activity_form.non_field_errors }}
+                                <div class="col-md-6">{{ activity_form.date_of_measurement.label_tag }} {{ activity_form.date_of_measurement }}</div>
+                                <div class="col-md-6">{{ activity_form.time_of_activity.label_tag }} {{ activity_form.time_of_activity }}</div>
+                                <div class="col-12">{{ activity_form.type_of_activity.label_tag }} {{ activity_form.type_of_activity }}</div>
+                                <div class="col-12">{{ activity_form.number_of_approaches.label_tag }} {{ activity_form.number_of_approaches }}</div>
+                                <div class="col-12">{{ activity_form.commentary.label_tag }} {{ activity_form.commentary }}</div>
+                                <div class="col-12 d-flex justify-content-end"><button class="btn btn-primary">Додати</button></div>
+                            </form>
+                        </div>
+                        <div class="col-12 col-xl-8">
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light"><tr><th>Дата</th><th>Час</th><th>Тип</th><th>Підходи</th><th class="text-end">Дії</th></tr></thead>
+                                    <tbody>
+                                        {% for r in activity_list %}
+                                        <tr>
+                                            <td>{{ r.date_of_measurement }}</td>
+                                            <td>{{ r.time_of_activity }}</td>
+                                            <td>{{ r.type_of_activity.name }}</td>
+                                            <td>{{ r.number_of_approaches|default:"—" }}</td>
+                                            <td class="text-end">
+                                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'card:activity_edit' r.pk %}">Змінити</a>
+                                                <a class="btn btn-outline-danger btn-sm" href="{% url 'card:activity_delete' r.pk %}">Видалити</a>
                                             </td>
                                         </tr>
                                         {% empty %}

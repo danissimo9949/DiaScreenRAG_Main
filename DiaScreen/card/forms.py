@@ -2,10 +2,12 @@ from django import forms
 from django.forms import inlineformset_factory
 
 from .models import (
+    AnthropometricMeasurement,
     FoodItem,
     FoodMeasurement,
     FoodPortion,
     GlucoseMeasurement,
+    GlycemicProfileMeasurement,
     InsulineDoseMeasurement,
     PhysicalActivityMeasurement,
 )
@@ -129,6 +131,50 @@ class InsulineDoseMeasurementForm(forms.ModelForm):
             'date_of_measurement': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'insuline_dose': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+        }
+
+
+class GlycemicProfileMeasurementForm(forms.ModelForm):
+    class Meta:
+        model = GlycemicProfileMeasurement
+        fields = [
+            'measurement_date',
+            'measurement_time',
+            'average_glucose',
+            'hba1c',
+            'hypoglycemic_events',
+            'hyperglycemic_events',
+        ]
+        widgets = {
+            'measurement_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'measurement_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'average_glucose': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'hba1c': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'hypoglycemic_events': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'hyperglycemic_events': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+        }
+
+
+class AnthropometricMeasurementForm(forms.ModelForm):
+    class Meta:
+        model = AnthropometricMeasurement
+        fields = [
+            'measurement_date',
+            'measurement_time',
+            'weight',
+            'bmi',
+            'waist_circumference',
+            'hip_circumference',
+            'notes',
+        ]
+        widgets = {
+            'measurement_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'measurement_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'weight': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': '0'}),
+            'bmi': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': '0'}),
+            'waist_circumference': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': '0'}),
+            'hip_circumference': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': '0'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
 

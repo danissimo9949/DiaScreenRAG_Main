@@ -4,16 +4,20 @@ from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DeleteView, UpdateView
 from .forms import (
+    AnthropometricMeasurementForm,
     FoodMeasurementForm,
     FoodPortionFormSet,
     FoodPortionFormSetEdit,
     GlucoseMeasurementForm,
+    GlycemicProfileMeasurementForm,
     InsulineDoseMeasurementForm,
     PhysicalActivityMeasurementForm,
 )
 from .models import (
+    AnthropometricMeasurement,
     FoodMeasurement,
     GlucoseMeasurement,
+    GlycemicProfileMeasurement,
     InsulineDoseMeasurement,
     PhysicalActivityMeasurement,
 )
@@ -31,6 +35,8 @@ def patient_card(request):
     food_form = FoodMeasurementForm()
     portion_formset = FoodPortionFormSet(prefix='portion')
     insuline_form = InsulineDoseMeasurementForm()
+    glycemic_form = GlycemicProfileMeasurementForm()
+    anthropometry_form = AnthropometricMeasurementForm()
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -76,10 +82,37 @@ def patient_card(request):
                 messages.success(request, 'Інʼєкцію інсуліну додано')
                 return redirect('card:patient_card')
 
-    glucose_list = GlucoseMeasurement.objects.filter(patient=patient).order_by('-date_of_measurement', '-time_of_measurement')[:10]
-    activity_list = PhysicalActivityMeasurement.objects.filter(patient=patient).order_by('-date_of_measurement', '-time_of_activity')[:10]
-    food_list = FoodMeasurement.objects.filter(patient=patient).order_by('-date_of_measurement', '-time_of_eating')[:10]
-    insuline_list = InsulineDoseMeasurement.objects.filter(patient=patient).order_by('-date_of_measurement', '-time')[:10]
+        elif action == 'create_glycemic_profile':
+            glycemic_form = GlycemicProfileMeasurementForm(request.POST)
+            if glycemic_form.is_valid():
+                obj = glycemic_form.save(commit=False)
+                obj.patient = patient
+                obj.save()
+                messages.success(request, 'Показник глікемії додано')
+                return redirect('card:patient_card')
+
+        elif action == 'create_anthropometry':
+            anthropometry_form = AnthropometricMeasurementForm(request.POST)
+            if anthropometry_form.is_valid():
+                obj = anthropometry_form.save(commit=False)
+                obj.patient = patient
+                obj.save()
+                messages.success(request, 'Антропометричний запис додано')
+                return redirect('card:patient_card')
+
+    glucose_qs = GlucoseMeasurement.objects.filter(patient=patient).order_by('-date_of_measurement', '-time_of_measurement')
+    activity_qs = PhysicalActivityMeasurement.objects.filter(patient=patient).order_by('-date_of_measurement', '-time_of_activity')
+    food_qs = FoodMeasurement.objects.filter(patient=patient).order_by('-date_of_measurement', '-time_of_eating')
+    insuline_qs = InsulineDoseMeasurement.objects.filter(patient=patient).order_by('-date_of_measurement', '-time')
+    glycemic_qs = GlycemicProfileMeasurement.objects.filter(patient=patient).order_by('-measurement_date', '-measurement_time')
+    anthropometry_qs = AnthropometricMeasurement.objects.filter(patient=patient).order_by('-measurement_date', '-measurement_time')
+
+    glucose_list = list(glucose_qs[:10])
+    activity_list = list(activity_qs[:10])
+    food_list = list(food_qs[:10])
+    insuline_list = list(insuline_qs[:10])
+    glycemic_list = list(glycemic_qs[:10])
+    anthropometry_list = list(anthropometry_qs[:10])
 
     return render(request, 'card/patient_card.html', {
         'glucose_form': glucose_form,
@@ -87,10 +120,20 @@ def patient_card(request):
         'food_form': food_form,
         'portion_formset': portion_formset,
         'insuline_form': insuline_form,
+        'glycemic_form': glycemic_form,
+        'anthropometry_form': anthropometry_form,
         'glucose_list': glucose_list,
         'activity_list': activity_list,
         'food_list': food_list,
         'insuline_list': insuline_list,
+        'glycemic_list': glycemic_list,
+        'anthropometry_list': anthropometry_list,
+        'glucose_latest': glucose_qs.first(),
+        'activity_latest': activity_qs.first(),
+        'food_latest': food_qs.first(),
+        'insuline_latest': insuline_qs.first(),
+        'glycemic_latest': glycemic_qs.first(),
+        'anthropometry_latest': anthropometry_qs.first(),
     })
 
 

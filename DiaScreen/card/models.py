@@ -1,4 +1,5 @@
 from decimal import Decimal
+from turtle import up
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -226,3 +227,50 @@ class InsulineDoseMeasurement(models.Model):
         indexes = [
             models.Index(fields=['patient', 'date_of_measurement']),
         ]
+
+
+class AnthropometricMeasurement(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='anthropometric_measurements')
+    measurement_date = models.DateField(default=timezone.localdate)
+    measurement_time = models.TimeField(default=current_local_time)
+    weight = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(200)])
+    bmi = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(50)])
+    waist_circumference = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(200)])
+    hip_circumference = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(200)])
+    notes = models.TextField(max_length=1000, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Антропометричний замір'
+        verbose_name_plural = 'Антропометричні заміри'
+        ordering = ['-measurement_date', '-created_at']
+        indexes = [
+            models.Index(fields=['patient', 'measurement_date']),
+        ]
+    
+    def __str__(self):
+        return f'Антропометричний замір від {self.measurement_date} о {self.measurement_time}'
+
+
+class GlycemicProfileMeasurement(models.Model):
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='glycemic_profile_measurements')
+    measurement_date = models.DateField(default=timezone.localdate)
+    measurement_time = models.TimeField(default=current_local_time)
+    average_glucose = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(35)])
+    hba1c = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(10)])
+    hypoglycemic_events = models.IntegerField(validators=[MinValueValidator(0)])
+    hyperglycemic_events = models.IntegerField(validators=[MinValueValidator(0)])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Замір глюкозного профілю'
+        verbose_name_plural = 'Заміри глюкозного профілю'
+        ordering = ['-measurement_date', '-created_at']
+        indexes = [
+            models.Index(fields=['patient', 'measurement_date']),
+        ]
+
+    def __str__(self):
+        return f'Замір глюкозного профілю від {self.patient} {self.measurement_date} о {self.measurement_time}'
