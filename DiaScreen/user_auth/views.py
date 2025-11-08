@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import LoginForm, UserRegistrationForm
-from django.contrib.auth import logout
+
+from .forms import LoginForm, UserRegistrationForm, PatientProfileForm
 
 
 def home(request):
@@ -56,3 +57,38 @@ def register_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+
+@login_required
+def profile_view(request):
+    patient = getattr(request.user, 'profile', None)
+
+    if patient is None:
+        messages.info(request, 'Профіль пацієнта ще не створено. Заповніть дані для точнішої аналітики.')
+
+    context = {
+        'user_obj': request.user,
+        'patient': patient,
+    }
+    return render(request, 'auth/profile.html', context)
+
+
+@login_required
+def profile_edit(request):
+    patient = getattr(request.user, 'profile', None)
+
+    form = PatientProfileForm(
+        request.POST or None,
+        request.FILES or None,
+        instance=patient,
+        user=request.user
+    )
+
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Профіль успішно оновлено.')
+            return redirect('profile')
+        messages.error(request, 'Виправте помилки у формі та спробуйте ще раз.')
+
+    return render(request, 'auth/profile_edit.html', {'form': form})

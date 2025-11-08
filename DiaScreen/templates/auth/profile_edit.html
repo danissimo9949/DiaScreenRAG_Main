@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Редагування профілю{% endblock %}
+
+{% block styles %}
+<style>
+    .profile-edit-card {
+        border: 2px solid rgba(13, 110, 253, 0.15);
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <h3 class="mb-1">Редагування профілю</h3>
+            <p class="text-muted mb-0">Оновіть персональну інформацію та дані пацієнта</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="{% url 'profile' %}">Повернутися до профілю</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-4">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="profile-edit-card bg-white p-4 p-lg-5">
+        <form method="post" enctype="multipart/form-data" class="row g-4">
+            {% csrf_token %}
+            <div class="col-12">
+                <h5 class="mb-3">Основні дані</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.username.id_for_label }}">Імʼя користувача</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger small">{{ form.username.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.phone_number.id_for_label }}">Номер телефону</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <div class="text-danger small">{{ form.phone_number.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">Дата народження</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}
+                            <div class="text-danger small">{{ form.date_of_birth.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.sex.id_for_label }}">Стать</label>
+                        {{ form.sex }}
+                        {% if form.sex.errors %}
+                            <div class="text-danger small">{{ form.sex.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.height.id_for_label }}">Зріст (м)</label>
+                        {{ form.height }}
+                        {% if form.height.errors %}
+                            <div class="text-danger small">{{ form.height.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.weight.id_for_label }}">Вага (кг)</label>
+                        {{ form.weight }}
+                        {% if form.weight.errors %}
+                            <div class="text-danger small">{{ form.weight.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.diabetes_type.id_for_label }}">Тип діабету</label>
+                        {{ form.diabetes_type }}
+                        {% if form.diabetes_type.errors %}
+                            <div class="text-danger small">{{ form.diabetes_type.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.blood_type.id_for_label }}">Група крові</label>
+                        {{ form.blood_type }}
+                        {% if form.blood_type.errors %}
+                            <div class="text-danger small">{{ form.blood_type.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="{{ form.avatar.id_for_label }}">Аватар</label>
+                        {{ form.avatar }}
+                        {% if form.avatar.errors %}
+                            <div class="text-danger small">{{ form.avatar.errors|striptags }}</div>
+                        {% endif %}
+                        {% if form.instance and form.instance.avatar %}
+                            <div class="mt-2">
+                                <img src="{{ form.instance.avatar.url }}" alt="Поточний аватар" class="img-thumbnail" style="max-width: 150px;">
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <h5 class="mb-3">Адреса</h5>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label" for="{{ form.address_country.id_for_label }}">Країна</label>
+                        {{ form.address_country }}
+                        {% if form.address_country.errors %}
+                            <div class="text-danger small">{{ form.address_country.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label" for="{{ form.address_city.id_for_label }}">Місто</label>
+                        {{ form.address_city }}
+                        {% if form.address_city.errors %}
+                            <div class="text-danger small">{{ form.address_city.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label" for="{{ form.address_street.id_for_label }}">Вулиця</label>
+                        {{ form.address_street }}
+                        {% if form.address_street.errors %}
+                            <div class="text-danger small">{{ form.address_street.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label" for="{{ form.address_house_number.id_for_label }}">Номер будинку</label>
+                        {{ form.address_house_number }}
+                        {% if form.address_house_number.errors %}
+                            <div class="text-danger small">{{ form.address_house_number.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label" for="{{ form.address_postal_code.id_for_label }}">Поштовий індекс</label>
+                        {{ form.address_postal_code }}
+                        {% if form.address_postal_code.errors %}
+                            <div class="text-danger small">{{ form.address_postal_code.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="d-flex justify-content-end gap-2">
+                    <a class="btn btn-outline-secondary" href="{% url 'profile' %}">Скасувати</a>
+                    <button class="btn btn-primary" type="submit">Зберегти зміни</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

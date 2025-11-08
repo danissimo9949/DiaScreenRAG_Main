@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Профіль користувача{% endblock %}
+
+{% block styles %}
+<style>
+    .profile-card {
+        border: 2px solid rgba(13, 110, 253, 0.15);
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.05);
+        overflow: hidden;
+    }
+
+    .profile-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(13, 110, 253, 0.2);
+        background-color: #f8f9fa;
+    }
+
+    .profile-section-title {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        font-size: 0.8rem;
+        color: var(--bs-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <h3 class="mb-1">Профіль користувача</h3>
+            <p class="text-muted mb-0">Персональна інформація та дані пацієнта</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="{% url 'profile_edit' %}">Редагувати профіль</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-4">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="profile-card bg-white">
+        <div class="row g-0">
+            <div class="col-12 col-lg-4 p-4 p-lg-5 border-end">
+                <div class="d-flex flex-column align-items-center text-center gap-3">
+                    {% if patient and patient.avatar %}
+                        <img src="{{ patient.avatar.url }}" alt="Аватар користувача" class="profile-avatar">
+                    {% else %}
+                        <div class="profile-avatar d-flex align-items-center justify-content-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#6c757d" viewBox="0 0 16 16">
+                                <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm10.216-1A2.238 2.238 0 0 0 13 12.996c0-.264-.167-1.03-.76-1.72C11.68 10.629 10.437 10 8 10c-2.437 0-3.68.63-4.24 1.276-.593.69-.76 1.457-.76 1.72 0 .001-.002.005-.008.015h10.224z"/>
+                                <path fill-rule="evenodd" d="M8 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+                            </svg>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <div class="profile-section-title mb-1">Користувач</div>
+                        <h4 class="mb-0">{{ user_obj.get_full_name|default:user_obj.username }}</h4>
+                        <p class="text-muted mb-0">{{ user_obj.email }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-8 p-4 p-lg-5">
+                <div class="row gy-4">
+                    <div class="col-12">
+                        <div class="profile-section-title mb-2">Основні дані</div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="small text-muted">Імʼя користувача</div>
+                                <div class="fw-semibold">{{ user_obj.username }}</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="small text-muted">Електронна пошта</div>
+                                <div class="fw-semibold">{{ user_obj.email|default:"Не вказано" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if patient %}
+                        <div class="col-12">
+                            <div class="profile-section-title mb-2">Медичні показники</div>
+                            <div class="row g-3">
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">Дата народження</div>
+                                    <div class="fw-semibold">{{ patient.date_of_birth|date:"d.m.Y"|default:"Не вказано" }}</div>
+                                </div>
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">Вік</div>
+                                    <div class="fw-semibold">{{ patient.age|default:"-" }}</div>
+                                </div>
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">Стать</div>
+                                    <div class="fw-semibold">
+                                        {% if patient.sex == "male" %}Чоловік{% elif patient.sex == "female" %}Жінка{% else %}Не вказано{% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">Зріст (м)</div>
+                                    <div class="fw-semibold">{{ patient.height|default:"-" }}</div>
+                                </div>
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">Вага (кг)</div>
+                                    <div class="fw-semibold">{{ patient.weight|default:"-" }}</div>
+                                </div>
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">BMI</div>
+                                    <div class="fw-semibold">{{ patient.bmi|floatformat:1|default:"-" }}</div>
+                                </div>
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">Тип діабету</div>
+                                    <div class="fw-semibold">
+                                        {% if patient.diabetes_type == "type1" %}Діабет 1-го типу{% elif patient.diabetes_type == "type2" %}Діабет 2-го типу{% elif patient.diabetes_type == "gestational" %}Гестаційний діабет{% else %}Не вказано{% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">Група крові</div>
+                                    <div class="fw-semibold">{{ patient.blood_type|default:"Не вказано" }}</div>
+                                </div>
+                                <div class="col-sm-6 col-lg-4">
+                                    <div class="small text-muted">Інсулінотерапія</div>
+                                    <div class="fw-semibold">
+                                        {% if patient.is_on_insulin %}Так{% else %}Ні{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="profile-section-title mb-2">Контактні дані</div>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <div class="small text-muted">Телефон</div>
+                                    <div class="fw-semibold">{{ patient.phone_number|default:"Не вказано" }}</div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="small text-muted">Адреса</div>
+                                    <div class="fw-semibold">
+                                        {% if patient.address %}
+                                            {{ patient.address }}
+                                        {% else %}
+                                            Не вказано
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">
+                                Для відображення детальної інформації створіть профіль пацієнта у розділі «Картка».
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

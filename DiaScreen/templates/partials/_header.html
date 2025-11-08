@@ -9,7 +9,7 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto fw-medium column-gap-2">
                         <li class="nav-item active">
-                          <a class="nav-link" href="#">Головна</a>
+                          <a class="nav-link" href="{% url 'home' %}">Головна</a>
                         </li>
                         <li class="nav-item">
                           <a class="nav-link" href="{% url 'information' %}">Корисна інформація</a>
@@ -30,20 +30,18 @@
                           <a href="{% url 'register' %}" class="btn btn-primary header__button" type="button">Реєстрація</a>
                         </li>
                         {% endif %}
-                        <li class="nav-item">
-                              {% if 'Doctors' in user.groups.all|join:", " %}
-                              <a class="btn btn-primary header__button" href="#">
+                        {% if user.is_authenticated %}
+                        <li class="nav-item d-flex gap-2">
+                              <a class="btn btn-primary header__button" href="{% url 'profile' %}">
                                   Профіль
                               </a>
-                              {% elif 'Patients' in user.groups.all|join:", " %}
-                              <a class="btn btn-primary header__button" href="#">
-                                  Профіль
-                              </a>
-                              <a class="btn btn-primary header__button" href="#">
+                              {% if 'Patients' in user.groups.all|join:", " %}
+                              <a class="btn btn-primary header__button" href="{% url 'card:patient_card' %}">
                                   Картка
                               </a>
                               {% endif %}
                         </li>
+                        {% endif %}
                         {% if user.is_authenticated %}
                         <li class="nav-btn">
                           <form action="{% url 'logout' %}" method="post">

@@ -1,11 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
-from django.http import JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DeleteView, UpdateView
-from .utils import get_patient_weekly_data
-
 from .forms import (
     FoodMeasurementForm,
     FoodPortionFormSet,
@@ -20,12 +17,6 @@ from .models import (
     InsulineDoseMeasurement,
     PhysicalActivityMeasurement,
 )
-
-@login_required
-def get_weekly_context(request):
-    patient = request.user.profile
-    data = get_patient_weekly_data(patient)
-    return JsonResponse(data, safe=False)
 
 @login_required
 def patient_card(request):
