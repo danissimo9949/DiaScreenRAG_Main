@@ -10,10 +10,11 @@ def home(request):
     return render(request, 'auth/home.html')
 
 
+def privacy_policy(request):
+    return render(request, 'privacy_policy.html')
+
+
 def login_view(request):
-    """
-    Перегляд для входу користувача.
-    """
     if request.user.is_authenticated:
         return redirect('home')
     
@@ -33,9 +34,6 @@ def login_view(request):
 
 
 def register_view(request):
-    """
-    Перегляд для реєстрації нового користувача.
-    """
     if request.user.is_authenticated:
         return redirect('home')
     

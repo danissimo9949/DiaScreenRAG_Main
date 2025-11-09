@@ -51,8 +51,11 @@
       
       <div class="text-center mt-3">
         <a href="{% url 'register' %}">Зарегистрироваться</a> |
-        <a href="#">Забыли пароль?</a>
+        <a href="{% url 'password_reset' %}">Забули пароль?</a>
       </div>
+      <p class="text-center text-muted small mt-3">
+        Я погоджуюсь з <a href="{% url 'privacy_policy' %}">політикою конфіденційності</a> DiaScreen.
+      </p>
     </div>
   </div>
 </div>

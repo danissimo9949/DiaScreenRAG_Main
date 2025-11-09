@@ -1,6 +1,11 @@
 import re
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    PasswordResetForm,
+    SetPasswordForm,
+    UserCreationForm,
+)
 from django.core.exceptions import ValidationError
 
 from .models import User, Patient, Address
@@ -134,6 +139,37 @@ class UserRegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+
+class StyledPasswordResetForm(PasswordResetForm):
+    email = forms.EmailField(
+        label='Email',
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'name@example.com',
+            'autocomplete': 'email',
+        })
+    )
+
+
+class StyledSetPasswordForm(SetPasswordForm):
+    new_password1 = forms.CharField(
+        label='Новий пароль',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'autocomplete': 'new-password',
+            'placeholder': 'Введіть новий пароль',
+        })
+    )
+    new_password2 = forms.CharField(
+        label='Підтвердження пароля',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'autocomplete': 'new-password',
+            'placeholder': 'Повторіть новий пароль',
+        })
+    )
 
 
 class PatientProfileForm(forms.ModelForm):
