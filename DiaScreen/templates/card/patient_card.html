@@ -96,6 +96,9 @@
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <h3 class="mb-0">Карта пацієнта</h3>
         <div class="d-flex flex-wrap gap-2 align-items-center">
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#supportTicketModal">
+                Тех. підтримка
+            </button>
             <a class="btn btn-outline-primary" href="{% url 'analytic:patient_dashboard' patient.pk %}">Аналітика</a>
             <form class="d-flex flex-wrap gap-2 align-items-center" action="{% url 'card:doctor_report' %}" method="get">
                 <select class="form-select form-select-sm" name="period">
@@ -509,6 +512,10 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block modals %}
+    {% include 'support/_support_modal.html' %}
 {% endblock %}
 
 {% block scripts %}

@@ -8,6 +8,7 @@ import json
 import requests
 
 from .models import AISession, AIMessage
+from support.forms import SupportTicketForm
 
 
 @login_required
@@ -19,6 +20,9 @@ def render_chat_ai(request):
     
     context = {
         'sessions': sessions,
+        'support_ticket_form': SupportTicketForm(
+            initial={'page_context': 'chat'}
+        ),
     }
     return render(request, 'chatAI/chat.html', context)
 

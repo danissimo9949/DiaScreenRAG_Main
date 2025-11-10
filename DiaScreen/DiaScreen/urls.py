@@ -26,6 +26,7 @@ urlpatterns = [
     path('chatAI/', include('chatAI.urls')),
     path('card/', include('card.urls')),
     path('analytics/', include('analytic.urls')),
+    path('support/', include('support.urls')),
 ]
 
 if settings.DEBUG:

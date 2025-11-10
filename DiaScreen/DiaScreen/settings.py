@@ -24,9 +24,9 @@ SECRET_KEY = 'django-insecure-)h!-te3)iuvevp_4pg@!dj9g^=k=qzg8#3q#)5^9w8)7@l9qx%
 RAG_API_URL = "http://127.0.0.1:8001/get-response"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'chatAI.apps.ChataiConfig',
     'card.apps.CardConfig',
     'analytic.apps.AnalyticConfig',
+    'support.apps.SupportConfig',
 ]
 
 AUTH_USER_MODEL = 'user_auth.User'

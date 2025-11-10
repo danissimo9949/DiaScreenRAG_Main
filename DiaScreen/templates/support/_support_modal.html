@@ -1,0 +1,58 @@
+<div class="modal fade" id="supportTicketModal" tabindex="-1" aria-labelledby="supportTicketModalLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supportTicketModalLabel">Звернення в технічну підтримку</h5>
+                <button type="button" class="btn-close close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Закрити">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'support:create_ticket' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    {{ support_ticket_form.page_context }}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    {% if support_ticket_form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in support_ticket_form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ support_ticket_form.subject.id_for_label }}">
+                            {{ support_ticket_form.subject.label }}
+                        </label>
+                        {{ support_ticket_form.subject }}
+                        {% if support_ticket_form.subject.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in support_ticket_form.subject.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ support_ticket_form.description.id_for_label }}">
+                            {{ support_ticket_form.description.label }}
+                        </label>
+                        {{ support_ticket_form.description }}
+                        {% if support_ticket_form.description.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in support_ticket_form.description.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-dismiss="modal">Скасувати</button>
+                    <button type="submit" class="btn btn-primary">Надіслати</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

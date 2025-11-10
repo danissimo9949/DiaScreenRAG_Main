@@ -3,6 +3,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
+from support.models import SupportTicket
+
 from .forms import LoginForm, UserRegistrationForm, PatientProfileForm
 
 
@@ -64,9 +66,18 @@ def profile_view(request):
     if patient is None:
         messages.info(request, 'Профіль пацієнта ще не створено. Заповніть дані для точнішої аналітики.')
 
+    is_support = request.user.groups.filter(name='Support').exists()
+    support_tickets = []
+    if is_support:
+        support_tickets = list(
+            SupportTicket.objects.select_related("user").order_by("-created_at")[:50]
+        )
+
     context = {
         'user_obj': request.user,
         'patient': patient,
+        'is_support': is_support,
+        'support_tickets': support_tickets,
     }
     return render(request, 'auth/profile.html', context)
 

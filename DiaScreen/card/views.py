@@ -34,6 +34,7 @@ from .models import (
     InsulineDoseMeasurement,
     PhysicalActivityMeasurement,
 )
+from support.forms import SupportTicketForm
 
 PDF_PRIMARY_FONT = "DiaScreenSans"
 PDF_BOLD_FONT = "DiaScreenSans-Bold"
@@ -89,6 +90,7 @@ def patient_card(request):
     insuline_form = InsulineDoseMeasurementForm()
     glycemic_form = GlycemicProfileMeasurementForm()
     anthropometry_form = AnthropometricMeasurementForm()
+    support_ticket_form = SupportTicketForm(initial={'page_context': 'patient_card'})
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -174,6 +176,7 @@ def patient_card(request):
         'insuline_form': insuline_form,
         'glycemic_form': glycemic_form,
         'anthropometry_form': anthropometry_form,
+        'support_ticket_form': support_ticket_form,
         'glucose_list': glucose_list,
         'activity_list': activity_list,
         'food_list': food_list,
