@@ -1,57 +1,213 @@
 {% extends 'base.html' %}
 
+{% block styles %}
+<style>
+    :root {
+        --analytics-primary: #1d4ed8;
+        --analytics-primary-soft: rgba(29, 78, 216, 0.08);
+        --analytics-emerald: #059669;
+        --analytics-amber: #f59e0b;
+        --analytics-rose: #f43f5e;
+        --analytics-slate: #1f2937;
+        --analytics-muted: rgba(15, 23, 42, 0.65);
+    }
+
+    .analytics-header h1 {
+        color: var(--analytics-slate);
+        letter-spacing: -0.02em;
+    }
+
+    .analytics-pill {
+        border-radius: 999px;
+        padding: 0.4rem 0.85rem;
+        font-weight: 600;
+        background: var(--analytics-primary-soft);
+        color: var(--analytics-primary);
+        font-size: 0.85rem;
+    }
+
+    .analytics-card {
+        border: none;
+        border-radius: 1.125rem;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .analytics-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 36px rgba(15, 23, 42, 0.12);
+    }
+
+    .analytics-card__badge {
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--analytics-muted);
+    }
+
+    .analytics-card__value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .analytics-card__icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 1rem;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .analytics-chart {
+        height: 320px;
+        position: relative;
+    }
+
+    .analytics-chart canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .analytics-card .table thead th {
+        font-weight: 600;
+        color: var(--analytics-muted);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+    }
+
+    .analytics-card .table tbody td {
+        vertical-align: middle;
+        color: #0f172a;
+    }
+
+    [data-chart-empty] {
+        color: var(--analytics-muted);
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+    }
+</style>
+{% endblock styles %}
+
 {% block content %}
 <section class="py-5">
     <div class="container">
-        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-5 analytics-header">
             <div>
-                <h1 class="fw-semibold">Аналітика пацієнта</h1>
+                <h1 class="fw-semibold mb-2">Аналітика пацієнта</h1>
                 <p class="text-muted mb-0">
                     {{ patient.user.get_full_name|default:patient.user.username }},
                     {{ patient.age|default:'вік невідомий' }},
                     {{ patient.get_diabetes_type_display|default:'тип діабету не вказаний' }}
                 </p>
             </div>
+            <span class="analytics-pill">
+                Оновлено {% now "d.m.Y H:i" %}
+            </span>
         </div>
 
         <div class="row g-4 mb-5">
             <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card analytics-card h-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase small mb-1">Замірів глюкози</p>
-                        <h3 class="mb-0">{{ total_glucose_measurements }}</h3>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <p class="analytics-card__badge mb-0">Замірів глюкози</p>
+                            <span class="analytics-card__icon" style="background: linear-gradient(135deg, #2563eb, #60a5fa);">
+                                G
+                            </span>
+                        </div>
+                        <div class="analytics-card__value">{{ total_glucose_measurements }}</div>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card analytics-card h-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase small mb-1">Прийомів їжі</p>
-                        <h3 class="mb-0">{{ total_food_measurements }}</h3>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <p class="analytics-card__badge mb-0">Прийомів їжі</p>
+                            <span class="analytics-card__icon" style="background: linear-gradient(135deg, #db2777, #fb7185);">
+                                F
+                            </span>
+                        </div>
+                        <div class="analytics-card__value">{{ total_food_measurements }}</div>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card analytics-card h-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase small mb-1">Фізичних активностей</p>
-                        <h3 class="mb-0">{{ total_activity_measurements }}</h3>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <p class="analytics-card__badge mb-0">Фізичних активностей</p>
+                            <span class="analytics-card__icon" style="background: linear-gradient(135deg, #0f766e, #34d399);">
+                                A
+                            </span>
+                        </div>
+                        <div class="analytics-card__value">{{ total_activity_measurements }}</div>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card analytics-card h-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase small mb-1">Ін&#8209;єкцій інсуліну</p>
-                        <h3 class="mb-0">{{ total_insuline_measurements }}</h3>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <p class="analytics-card__badge mb-0">Ін&#8209;єкцій інсуліну</p>
+                            <span class="analytics-card__icon" style="background: linear-gradient(135deg, #b45309, #fbbf24);">
+                                I
+                            </span>
+                        </div>
+                        <div class="analytics-card__value">{{ total_insuline_measurements }}</div>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card analytics-card h-100">
                     <div class="card-body">
-                        <p class="text-muted text-uppercase small mb-1">Глюкозних профілів</p>
-                        <h3 class="mb-0">{{ total_glycemic_profile_measurements }}</h3>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <p class="analytics-card__badge mb-0">Глюкозних профілів</p>
+                            <span class="analytics-card__icon" style="background: linear-gradient(135deg, #7c3aed, #a855f7);">
+                                P
+                            </span>
+                        </div>
+                        <div class="analytics-card__value">{{ total_glycemic_profile_measurements }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-lg-8">
+                <div class="card analytics-card h-100">
+                    <div class="card-header bg-white border-0 pb-0">
+                        <h5 class="mb-0 text-primary-emphasis">Динаміка рівня глюкози (7 днів)</h5>
+                        <p class="text-muted small mb-0">Середні значення за день</p>
+                    </div>
+                    <div class="card-body analytics-chart">
+                        <canvas id="glucoseTrendChart"></canvas>
+                        <p class="text-muted text-center small" data-chart-empty="glucoseTrend" hidden>
+                            Недостатньо даних для побудови графіка.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card analytics-card h-100">
+                    <div class="card-header bg-white border-0 pb-0">
+                        <h5 class="mb-0 text-primary-emphasis">Тижнева активність</h5>
+                        <p class="text-muted small mb-0">Скільки записів за останні 7 днів</p>
+                    </div>
+                    <div class="card-body analytics-chart">
+                        <canvas id="weeklyActivityChart"></canvas>
+                        <p class="text-muted text-center small" data-chart-empty="weeklyActivity" hidden>
+                            Даних за останні 7 днів поки немає.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -59,8 +215,25 @@
 
         <div class="row g-4 mb-5">
             <div class="col-lg-6">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-0">
+                <div class="card analytics-card h-100">
+                    <div class="card-header bg-white border-0 pb-0">
+                        <h5 class="mb-0 text-primary-emphasis">Категорії замірів глюкози</h5>
+                        <p class="text-muted small mb-0">Розподіл за обраними сценаріями</p>
+                    </div>
+                    <div class="card-body analytics-chart">
+                        <canvas id="glucoseCategoryChart"></canvas>
+                        <p class="text-muted text-center small" data-chart-empty="glucoseCategory" hidden>
+                            Категорії зʼявляться, щойно додасте кілька замірів.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-lg-6">
+                <div class="card analytics-card h-100">
+                    <div class="card-header bg-white border-0 pb-0">
                         <h5 class="mb-0">Активність за останні 7 днів</h5>
                     </div>
                     <div class="card-body">
@@ -86,8 +259,8 @@
                 </div>
             </div>
             <div class="col-lg-6">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-0">
+                <div class="card analytics-card h-100">
+                    <div class="card-header bg-white border-0 pb-0">
                         <h5 class="mb-0">Середні показники</h5>
                     </div>
                     <div class="card-body">
@@ -118,8 +291,8 @@
             </div>
         </div>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0">
+        <div class="card analytics-card">
+            <div class="card-header bg-white border-0 pb-0">
                 <h5 class="mb-0">Останні заміри глюкози</h5>
             </div>
             <div class="table-responsive">
@@ -152,4 +325,159 @@
     </div>
 </section>
 {% endblock content %}
+
+{% block scripts %}
+{{ block.super }}
+{{ chart_payload|json_script:"analytics-chart-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script>
+    (function() {
+        const dataElement = document.getElementById('analytics-chart-data');
+        if (!dataElement) {
+            return;
+        }
+        let payload = {};
+        try {
+            payload = JSON.parse(dataElement.textContent);
+        } catch (error) {
+            console.error('Failed to parse analytics payload', error);
+            return;
+        }
+
+        const palette = {
+            primary: '#2563eb',
+            primarySoft: 'rgba(37, 99, 235, 0.2)',
+            emerald: '#10b981',
+            amber: '#f59e0b',
+            rose: '#f43f5e',
+            violet: '#8b5cf6',
+            slate: '#1f2937'
+        };
+
+        const showEmptyMessage = (key, shouldShow) => {
+            document
+                .querySelectorAll(`[data-chart-empty="${key}"]`)
+                .forEach((node) => {
+                    node.hidden = !shouldShow;
+                });
+        };
+
+        const glucoseTrendEl = document.getElementById('glucoseTrendChart');
+        if (glucoseTrendEl && payload.glucoseTrend && payload.glucoseTrend.labels.length) {
+            new Chart(glucoseTrendEl, {
+                type: 'line',
+                data: {
+                    labels: payload.glucoseTrend.labels,
+                    datasets: [{
+                        label: 'Середнє значення, ммоль/л',
+                        data: payload.glucoseTrend.data,
+                        fill: false,
+                        tension: 0.35,
+                        borderWidth: 3,
+                        borderColor: palette.primary,
+                        backgroundColor: palette.primarySoft,
+                        pointBackgroundColor: palette.primary,
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: { top: 12, right: 16, bottom: 12, left: 16 }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                precision: 1
+                            }
+                        }
+                    }
+                }
+            });
+            showEmptyMessage('glucoseTrend', false);
+        } else {
+            showEmptyMessage('glucoseTrend', true);
+        }
+
+        const weeklyActivityEl = document.getElementById('weeklyActivityChart');
+        if (weeklyActivityEl && payload.weeklyActivity && payload.weeklyActivity.data.some((value) => value > 0)) {
+            new Chart(weeklyActivityEl, {
+                type: 'bar',
+                data: {
+                    labels: payload.weeklyActivity.labels,
+                    datasets: [{
+                        label: 'Кількість записів',
+                        data: payload.weeklyActivity.data,
+                        backgroundColor: [
+                            palette.primary,
+                            palette.rose,
+                            palette.emerald,
+                            palette.amber
+                        ],
+                        borderRadius: 8,
+                        maxBarThickness: 42
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: { top: 12, right: 16, bottom: 12, left: 16 }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            showEmptyMessage('weeklyActivity', false);
+        } else {
+            showEmptyMessage('weeklyActivity', true);
+        }
+
+        const glucoseCategoryEl = document.getElementById('glucoseCategoryChart');
+        if (glucoseCategoryEl && payload.glucoseCategories && payload.glucoseCategories.data.length) {
+            new Chart(glucoseCategoryEl, {
+                type: 'doughnut',
+                data: {
+                    labels: payload.glucoseCategories.labels,
+                    datasets: [{
+                        data: payload.glucoseCategories.data,
+                        backgroundColor: [
+                            palette.primary,
+                            palette.rose,
+                            palette.emerald,
+                            palette.amber,
+                            palette.violet,
+                            palette.slate
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: { top: 12, right: 16, bottom: 12, left: 16 }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            showEmptyMessage('glucoseCategory', false);
+        } else {
+            showEmptyMessage('glucoseCategory', true);
+        }
+    })();
+</script>
+{% endblock scripts %}
 

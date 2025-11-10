@@ -19,8 +19,7 @@ urlpatterns = [
     path('insuline/<int:pk>/delete/', views.InsulineDeleteView.as_view(), name='insuline_delete'),
 
     # Navigation buttons targets
-    path('analytics/', views.analytics_placeholder, name='analytics'),
-    path('doctor-report/', views.doctor_report_placeholder, name='doctor_report'),
+    path('doctor-report/', views.doctor_report, name='doctor_report'),
 ]
 
 

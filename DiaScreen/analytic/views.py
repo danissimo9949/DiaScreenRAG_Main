@@ -2,8 +2,8 @@ from datetime import timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.db.models import Avg, Count
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg
 from django.utils import timezone
 from django.views.generic import TemplateView
 
@@ -85,4 +85,68 @@ class PatientAnalyticsView(LoginRequiredMixin, TemplateView):
             glucose_qs.select_related("patient__user").order_by("-created_at")[:5]
         )
 
+        context["chart_payload"] = self._build_chart_payload(
+            glucose_qs=glucose_qs,
+            weekly_metrics=context["weekly_metrics"],
+            week_start=week_start,
+            today=today,
+        )
+
         return context
+
+    def _build_chart_payload(self, *, glucose_qs, weekly_metrics, week_start, today):
+        daily_glucose = (
+            glucose_qs.filter(date_of_measurement__range=(week_start, today))
+            .values("date_of_measurement")
+            .annotate(avg=Avg("glucose"))
+            .order_by("date_of_measurement")
+        )
+
+        glucose_trend_labels = [
+            entry["date_of_measurement"].strftime("%d.%m") for entry in daily_glucose
+        ]
+        glucose_trend_values = [
+            float(entry["avg"]) if entry["avg"] is not None else None
+            for entry in daily_glucose
+        ]
+
+        weekly_activity_labels = [
+            "Замірів глюкози",
+            "Прийомів їжі",
+            "Фізичних активностей",
+            "Інʼєкцій інсуліну",
+        ]
+        weekly_activity_values = [
+            weekly_metrics["glucose"],
+            weekly_metrics["food"],
+            weekly_metrics["activity"],
+            weekly_metrics["insuline"],
+        ]
+
+        category_counts = (
+            glucose_qs.values("glucose_measurement_category")
+            .annotate(total=Count("id"))
+            .order_by("glucose_measurement_category")
+        )
+
+        category_labels = []
+        category_values = []
+        for entry in category_counts:
+            label = entry["glucose_measurement_category"] or "Без категорії"
+            category_labels.append(label)
+            category_values.append(entry["total"])
+
+        return {
+            "glucoseTrend": {
+                "labels": glucose_trend_labels,
+                "data": glucose_trend_values,
+            },
+            "weeklyActivity": {
+                "labels": weekly_activity_labels,
+                "data": weekly_activity_values,
+            },
+            "glucoseCategories": {
+                "labels": category_labels,
+                "data": category_values,
+            },
+        }
