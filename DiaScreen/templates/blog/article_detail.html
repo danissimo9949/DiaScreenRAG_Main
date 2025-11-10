@@ -3,6 +3,10 @@
 
 {% block title %}{{ article.article_name }} - DiaScreen{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/pages/blog-article-detail.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container my-5">
     {% if messages %}
@@ -31,7 +35,7 @@
 
     <div class="row">
         <div class="col-lg-8 mx-auto">
-            <article class="card shadow-sm border-0">
+            <article class="card shadow-sm border-0 article-detail-card">
                 {% if article.article_img %}
                 <img src="{{ article.article_img.url }}" class="card-img-top" alt="{{ article.article_name }}" style="max-height: 400px; object-fit: cover;">
                 {% endif %}
@@ -65,7 +69,7 @@
 
                     <hr class="my-4">
 
-                    <div class="article-text">
+                    <div class="article-detail-text">
                         {% for paragraph in paragraphs %}
                             {% if paragraph.strip %}
                             <p class="mb-3">{{ paragraph }}</p>
@@ -101,24 +105,5 @@
     </div>
 </div>
 
-<style>
-    .article-text {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: #333;
-    }
-
-    .article-text p {
-        text-align: justify;
-    }
-
-    .card {
-        border-radius: 0.5rem;
-    }
-
-    .card-img-top {
-        border-radius: 0.5rem 0.5rem 0 0;
-    }
-</style>
 {% endblock %}
 

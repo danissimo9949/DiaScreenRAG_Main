@@ -1,0 +1,24 @@
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.home-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+@media (max-width: 768px) {
+    .home-hero-title {
+        font-size: 2rem;
+    }
+
+    .home-hero-lead {
+        font-size: 1rem;
+    }
+}
+
+

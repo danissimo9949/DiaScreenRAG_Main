@@ -1,0 +1,85 @@
+.error-404-wrapper {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1rem;
+    background:
+        radial-gradient(circle at top right, rgba(13, 110, 253, 0.12), transparent 60%),
+        radial-gradient(circle at bottom left, rgba(13, 110, 253, 0.08), transparent 55%);
+}
+
+.error-404-card {
+    max-width: 700px;
+    background: #fff;
+    border-radius: 1.5rem;
+    padding: 3rem;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+    position: relative;
+    overflow: hidden;
+}
+
+.error-404-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.error-404-title {
+    font-size: clamp(2.8rem, 5vw, 3.6rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: #0b2149;
+}
+
+.error-illustration {
+    width: clamp(220px, 35vw, 260px);
+    height: clamp(220px, 35vw, 260px);
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.12), rgba(13, 110, 253, 0.03));
+    border: 1px solid rgba(13, 110, 253, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    position: relative;
+}
+
+.error-illustration::after {
+    content: "";
+    position: absolute;
+    inset: 10%;
+    border-radius: 50%;
+    border: 1px dashed rgba(13, 110, 253, 0.3);
+    animation: pulse 6s linear infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.error-illustration svg {
+    width: 60%;
+    height: 60%;
+    color: #0d6efd;
+}
+
+.error-404-actions .btn {
+    padding-inline: 1.75rem;
+    border-radius: 999px;
+}
+
+

@@ -1,0 +1,19 @@
+.article-detail-card {
+    border-radius: 0.5rem;
+}
+
+.article-detail-card .card-img-top {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.article-detail-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #333;
+}
+
+.article-detail-text p {
+    text-align: justify;
+}
+
+

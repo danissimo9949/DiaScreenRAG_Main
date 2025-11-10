@@ -3,14 +3,18 @@
 
 {% block title %}Головна - DiaScreen{% endblock %}
 
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/pages/home.css' %}">
+{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
 <div class="bg-primary text-white py-5 mb-5">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8 mx-auto text-center">
-                <h1 class="display-4 fw-bold mb-3">DiaScreen</h1>
-                <p class="lead mb-4">Веб-орієнтована інформаційна система для підтримки пацієнтів з цукровим діабетом</p>
+                <h1 class="display-4 fw-bold mb-3 home-hero-title">DiaScreen</h1>
+                <p class="lead mb-4 home-hero-lead">Веб-орієнтована інформаційна система для підтримки пацієнтів з цукровим діабетом</p>
                 <p class="mb-0">Ваш надійний помічник у контролі та управлінні діабетом</p>
             </div>
         </div>
@@ -21,7 +25,7 @@
     <!-- Перший блок: ШІ-асистент медичний -->
     <div class="row mb-5">
         <div class="col-12">
-            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden home-card">
                 <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem;">
                     <div class="row align-items-center">
                         <div class="col-md-2 text-center mb-3 mb-md-0">
@@ -121,7 +125,7 @@
     <!-- Другий блок: Ведення записів по хворобі -->
     <div class="row mb-5">
         <div class="col-12">
-            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden home-card">
                 <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 2rem;">
                     <div class="row align-items-center">
                         <div class="col-md-2 text-center mb-3 mb-md-0">
@@ -261,28 +265,4 @@
     </div>
 </div>
 
-<style>
-    .bg-gradient {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-    }
-    
-    @media (max-width: 768px) {
-        .display-4 {
-            font-size: 2rem;
-        }
-        
-        .lead {
-            font-size: 1rem;
-        }
-    }
-</style>
 {% endblock %}
