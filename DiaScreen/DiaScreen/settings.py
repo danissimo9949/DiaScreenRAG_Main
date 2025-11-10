@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'blog.apps.BlogConfig',
     'chatAI.apps.ChataiConfig',
     'card.apps.CardConfig',
+    'analytic.apps.AnalyticConfig',
 ]
 
 AUTH_USER_MODEL = 'user_auth.User'

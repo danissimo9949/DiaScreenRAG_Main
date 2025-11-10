@@ -31,11 +31,11 @@
                         </li>
                         {% endif %}
                         {% if user.is_authenticated %}
-                        <li class="nav-item d-flex gap-2">
+                        <li class="nav-item d-flex gap-2 flex-wrap">
                               <a class="btn btn-primary header__button" href="{% url 'profile' %}">
                                   Профіль
                               </a>
-                              {% if 'Patients' in user.groups.all|join:", " %}
+                              {% if user.has_patient_profile %}
                               <a class="btn btn-primary header__button" href="{% url 'card:patient_card' %}">
                                   Картка
                               </a>

@@ -134,6 +134,7 @@ def patient_card(request):
         'insuline_latest': insuline_qs.first(),
         'glycemic_latest': glycemic_qs.first(),
         'anthropometry_latest': anthropometry_qs.first(),
+        'patient': patient,
     })
 
 

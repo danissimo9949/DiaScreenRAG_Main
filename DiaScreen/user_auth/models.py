@@ -1,6 +1,8 @@
 from datetime import date
-from django.db import models
+
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
 
 class Address(models.Model):
     """
@@ -43,6 +45,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def has_patient_profile(self):
+        try:
+            self.profile
+        except ObjectDoesNotExist:
+            return False
+        return True
 
 
 class Patient(models.Model):

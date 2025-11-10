@@ -96,7 +96,7 @@
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <h3 class="mb-0">Карта пацієнта</h3>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-primary" href="{% url 'card:analytics' %}">Аналітика</a>
+            <a class="btn btn-outline-primary" href="{% url 'analytic:patient_dashboard' patient.pk %}">Аналітика</a>
             <a class="btn btn-outline-secondary" href="{% url 'card:doctor_report' %}">Створити звіт лікарю</a>
         </div>
     </div>
