@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-)h!-te3)iuvevp_4pg@!dj9g^=k=qzg8#3q#)5^9w8)7@l9qx%
 RAG_API_URL = "http://127.0.0.1:8001/get-response"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -127,7 +127,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
@@ -150,4 +150,5 @@ DEFAULT_FROM_EMAIL = 'DiaScreen <danissimo228337@gmail.com>'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 

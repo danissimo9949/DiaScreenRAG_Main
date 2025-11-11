@@ -113,13 +113,18 @@ def send_message(request):
             response.raise_for_status()
             data = response.json()
             answer_text = (data.get('answer') or '').strip()
+            sources = data.get('sources') or []
+            metadata = data.get('metadata') or {}
 
             if not answer_text:
                 answer_text = 'Вибачте, сервіс не надав відповіді.'
 
             ai_message.message_text = answer_text
             ai_message.status = 'completed'
-            ai_message.save(update_fields=['message_text', 'status'])
+            ai_message.sources = sources
+            ai_message.metadata = metadata
+            ai_message.response_time_ms = metadata.get('response_time_ms')
+            ai_message.save(update_fields=['message_text', 'status', 'sources', 'metadata', 'response_time_ms'])
         except (requests.RequestException, ValueError) as exc:
             ai_message.message_text = 'Вибачте, зараз я не можу відповісти. Спробуйте трохи пізніше.'
             ai_message.status = 'error'
