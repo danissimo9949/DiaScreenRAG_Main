@@ -65,6 +65,17 @@ main {
     margin-top: 0.5rem;
 }
 
+.message-meta-wrapper {
+    margin-top: 0.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.message-meta {
+    font-size: 0.7rem;
+}
+
 /* Активный элемент истории */
 .history-item.active {
     border-color: var(--bs-primary);
@@ -118,4 +129,19 @@ main {
     30% {
         opacity: 1;
     }
+}
+
+.chat-personal-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    align-items: flex-start;
+}
+
+.chat-personal-toggle small {
+    font-size: 0.75rem;
+}
+
+.chat-personal-toggle .form-check {
+    margin-bottom: 0;
 }

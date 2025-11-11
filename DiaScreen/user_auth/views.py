@@ -31,6 +31,7 @@ def home(request):
     patient_profile = None
     target_min_value = 4.0
     target_max_value = 9.0
+    profile_completion_warning = None
 
     if request.user.is_authenticated:
         patient_profile = getattr(request.user, 'profile', None)
@@ -101,6 +102,28 @@ def home(request):
                         'css_class': 'bg-danger-subtle text-danger',
                     }
 
+        if patient_profile:
+            missing_fields = []
+            if not patient_profile.date_of_birth:
+                missing_fields.append('дата народження')
+            if not patient_profile.sex:
+                missing_fields.append('стать')
+            if patient_profile.height is None:
+                missing_fields.append('зріст')
+            if patient_profile.weight is None:
+                missing_fields.append('вага')
+            if not patient_profile.diabetes_type:
+                missing_fields.append('тип діабету')
+            if missing_fields:
+                profile_completion_warning = (
+                    f"Заповніть профіль: {', '.join(missing_fields)}. "
+                    "Це допоможе отримувати точніші рекомендації."
+                )
+        else:
+            profile_completion_warning = (
+                "Створіть профіль пацієнта, щоб система могла персоналізувати рекомендації."
+            )
+
     context = {
         'patient_count': patient_count,
         'total_entries': total_entries,
@@ -110,6 +133,7 @@ def home(request):
         'daily_status': daily_status,
         'target_glucose_min': target_min_value,
         'target_glucose_max': target_max_value,
+        'profile_completion_warning': profile_completion_warning,
     }
 
     return render(request, 'auth/home.html', context)

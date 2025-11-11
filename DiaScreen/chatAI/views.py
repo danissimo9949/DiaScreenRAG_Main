@@ -1,14 +1,119 @@
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
+from datetime import datetime
+
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 import json
 import requests
 
-from .models import AISession, AIMessage
+from card.models import (
+    GlucoseMeasurement,
+    InsulineDoseMeasurement,
+    GlycemicProfileMeasurement,
+    PhysicalActivityMeasurement,
+    FoodMeasurement,
+    AnthropometricMeasurement,
+)
 from support.forms import SupportTicketForm
+
+from .models import AISession, AIMessage
+
+
+def build_personal_context(user):
+    patient = getattr(user, 'profile', None)
+    if patient is None:
+        return "Пацієнт ще не створив профіль. Персональні дані недоступні."
+
+    parts = []
+    full_name = user.get_full_name() or user.username
+    parts.append(f"Пацієнт: {full_name}")
+
+    if patient.age is not None:
+        parts.append(f"Вік: {patient.age} років")
+    if patient.sex:
+        parts.append(f"Стать: {'Чоловік' if patient.sex == 'male' else 'Жінка'}")
+    if patient.diabetes_type:
+        parts.append(f"Тип діабету: {patient.get_diabetes_type_display()}")
+    if patient.target_glucose_min is not None and patient.target_glucose_max is not None:
+        parts.append(
+            f"Цільовий діапазон глюкози: {float(patient.target_glucose_min):.1f} – {float(patient.target_glucose_max):.1f} ммоль/л"
+        )
+    if patient.height:
+        parts.append(f"Зріст: {patient.height} м")
+    if patient.weight:
+        parts.append(f"Вага: {patient.weight} кг")
+    if patient.bmi:
+        parts.append(f"ІМТ: {patient.bmi:.1f}")
+
+    latest_glucose = (
+        GlucoseMeasurement.objects.filter(patient=patient)
+        .order_by('-date_of_measurement', '-time_of_measurement')
+        .first()
+    )
+    latest_insuline = (
+        InsulineDoseMeasurement.objects.filter(patient=patient)
+        .order_by('-date_of_measurement', '-time')
+        .first()
+    )
+    latest_glycemic = (
+        GlycemicProfileMeasurement.objects.filter(patient=patient)
+        .order_by('-measurement_date', '-measurement_time')
+        .first()
+    )
+    latest_activity = (
+        PhysicalActivityMeasurement.objects.filter(patient=patient)
+        .order_by('-date_of_measurement', '-time_of_activity')
+        .first()
+    )
+    latest_food = (
+        FoodMeasurement.objects.filter(patient=patient)
+        .order_by('-date_of_measurement', '-time_of_eating')
+        .first()
+    )
+    latest_anthropometry = (
+        AnthropometricMeasurement.objects.filter(patient=patient)
+        .order_by('-measurement_date', '-measurement_time')
+        .first()
+    )
+
+    def format_datetime(date_obj, time_obj):
+        if date_obj and time_obj:
+            return f"{date_obj.strftime('%d.%m.%Y')} {time_obj.strftime('%H:%M')}"
+        if date_obj:
+            return date_obj.strftime('%d.%m.%Y')
+        return ''
+
+    if latest_glucose:
+        parts.append(
+            f"Останній замір глюкози: {latest_glucose.glucose} ммоль/л ({format_datetime(latest_glucose.date_of_measurement, latest_glucose.time_of_measurement)})"
+        )
+    if latest_insuline:
+        parts.append(
+            f"Остання інʼєкція інсуліну: {latest_insuline.insuline_dose} ОД, категорія {latest_insuline.category} ({format_datetime(latest_insuline.date_of_measurement, latest_insuline.time)})"
+        )
+    if latest_glycemic:
+        parts.append(
+            f"Останній глікемічний профіль: середня глюкоза {latest_glycemic.average_glucose} ммоль/л, HbA1c {latest_glycemic.hba1c}% ({format_datetime(latest_glycemic.measurement_date, latest_glycemic.measurement_time)})"
+        )
+    if latest_activity:
+        parts.append(
+            f"Остання активність: {latest_activity.type_of_activity.name} ({format_datetime(latest_activity.date_of_measurement, latest_activity.time_of_activity)})"
+        )
+    if latest_food:
+        parts.append(
+            f"Останній прийом їжі: {latest_food.category} ({format_datetime(latest_food.date_of_measurement, latest_food.time_of_eating)})"
+        )
+    if latest_anthropometry:
+        parts.append(
+            f"Остання антропометрія: вага {latest_anthropometry.weight} кг, ІМТ {latest_anthropometry.bmi} ({format_datetime(latest_anthropometry.measurement_date, latest_anthropometry.measurement_time)})"
+        )
+
+    if not parts:
+        return "Персональні дані пацієнта не заповнені."
+    return "\n".join(parts)
 
 
 @login_required
@@ -45,6 +150,7 @@ def get_session_messages(request, session_id):
                 'message_text': msg.message_text,
                 'created_at': msg.created_at.strftime('%H:%M'),
                 'status': msg.status,
+                'personal_context_used': bool((msg.metadata or {}).get('personal_context_used')),
             }
             for msg in messages
         ]
@@ -70,6 +176,7 @@ def send_message(request):
         data = json.loads(request.body)
         message_text = data.get('message', '').strip()
         session_id = data.get('session_id', None)
+        use_personal_context = bool(data.get('use_personal_context'))
         
         if not message_text:
             return JsonResponse({'success': False, 'error': 'Повідомлення не може бути порожнім'}, status=400)
@@ -97,6 +204,8 @@ def send_message(request):
             message_text=message_text,
             status='completed'
         )
+        user_message.metadata = {'personal_context_used': use_personal_context}
+        user_message.save(update_fields=['metadata'])
         
         ai_message = AIMessage.objects.create(
             session=session,
@@ -106,13 +215,34 @@ def send_message(request):
         )
 
         rag_url = getattr(settings, 'RAG_API_URL', 'http://127.0.0.1:8001/get-response')
+        rag_personal_url = getattr(
+            settings,
+            'RAG_PERSONAL_API_URL',
+            f"{rag_url.rstrip('/')}/personalized"
+        )
+        personal_context = build_personal_context(request.user) if use_personal_context else None
+        mode = 'personalized' if personal_context else 'standard'
 
         try:
-            response = requests.get(
-                rag_url,
-                params={'question': message_text},
-                timeout=15
-            )
+            if personal_context:
+                response = requests.post(
+                    rag_personal_url,
+                    json={
+                        'question': message_text,
+                        'context': personal_context,
+                        'mode': mode,
+                    },
+                    timeout=300
+                )
+            else:
+                response = requests.get(
+                    rag_url,
+                    params={
+                        'question': message_text,
+                        'mode': mode,
+                    },
+                    timeout=300
+                )
             response.raise_for_status()
             data = response.json()
             answer_text = (data.get('answer') or '').strip()
@@ -121,6 +251,12 @@ def send_message(request):
 
             if not answer_text:
                 answer_text = 'Вибачте, сервіс не надав відповіді.'
+
+            metadata['personal_context_used'] = use_personal_context
+            if personal_context:
+                metadata['personal_context'] = personal_context
+            metadata.setdefault('mode', mode)
+            metadata['session_id'] = session.session_id
 
             ai_message.message_text = answer_text
             ai_message.status = 'completed'
@@ -132,7 +268,13 @@ def send_message(request):
             ai_message.message_text = 'Вибачте, зараз я не можу відповісти. Спробуйте трохи пізніше.'
             ai_message.status = 'error'
             ai_message.error_message = str(exc)
-            ai_message.save(update_fields=['message_text', 'status', 'error_message'])
+            ai_message.metadata = {
+                'personal_context_used': use_personal_context,
+                'personal_context': personal_context,
+                'mode': mode,
+                'session_id': session.session_id,
+            }
+            ai_message.save(update_fields=['message_text', 'status', 'error_message', 'metadata'])
 
         ai_message.refresh_from_db()
         
@@ -144,6 +286,7 @@ def send_message(request):
                 'sender': 'user',
                 'message_text': user_message.message_text,
                 'created_at': user_message.created_at.strftime('%H:%M'),
+                'personal_context_used': use_personal_context,
             },
             'assistant_message': {
                 'message_id': ai_message.message_id,
@@ -152,6 +295,7 @@ def send_message(request):
                 'created_at': ai_message.created_at.strftime('%H:%M'),
                 'status': ai_message.status,
                 'error_message': ai_message.error_message or '',
+                'personal_context_used': use_personal_context,
             },
         })
     except Exception as e:

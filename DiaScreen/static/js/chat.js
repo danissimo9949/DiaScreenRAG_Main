@@ -4,6 +4,11 @@ let currentSessionId = null;
         return token ? token.value : '';
     }
 
+    function isPersonalContextEnabled() {
+        const toggle = document.getElementById('personalContextToggle');
+        return toggle ? toggle.checked : false;
+    }
+
     function autoResize(textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
@@ -76,7 +81,13 @@ let currentSessionId = null;
                     `;
                 } else {
                     data.messages.forEach(msg => {
-                        addMessageToUI(msg.message_text, msg.sender, msg.created_at, msg.status);
+                        addMessageToUI(
+                            msg.message_text,
+                            msg.sender,
+                            msg.created_at,
+                            msg.status,
+                            { personalContext: Boolean(msg.personal_context_used) }
+                        );
                     });
                 }
             }
@@ -165,7 +176,14 @@ let currentSessionId = null;
             emptyChat.remove();
         }
 
-        addMessageToUI(message, 'user', getCurrentTime());
+        const personalContextEnabled = isPersonalContextEnabled();
+        const userMessageEl = addMessageToUI(
+            message,
+            'user',
+            getCurrentTime(),
+            'completed',
+            { personalContext: personalContextEnabled }
+        );
 
         showTypingIndicator();
 
@@ -178,7 +196,8 @@ let currentSessionId = null;
                 },
                 body: JSON.stringify({
                     message: message,
-                    session_id: currentSessionId
+                    session_id: currentSessionId,
+                    use_personal_context: personalContextEnabled
                 })
             });
 
@@ -189,14 +208,28 @@ let currentSessionId = null;
             if (data.success) {
                 currentSessionId = data.session_id;
 
+                if (data.user_message && userMessageEl) {
+                    applyPersonalContextBadge(
+                        userMessageEl,
+                        Boolean(data.user_message.personal_context_used)
+                    );
+                }
+
                 if (data.assistant_message) {
                     const assistant = data.assistant_message;
-                    addMessageToUI(
+                    const assistantEl = addMessageToUI(
                         assistant.message_text,
                         'assistant',
                         assistant.created_at || getCurrentTime(),
-                        assistant.status || 'completed'
+                        assistant.status || 'completed',
+                        { personalContext: Boolean(assistant.personal_context_used) }
                     );
+                    if (assistantEl) {
+                        applyPersonalContextBadge(
+                            assistantEl,
+                            Boolean(assistant.personal_context_used)
+                        );
+                    }
 
                     if (assistant.status === 'error' && assistant.error_message) {
                         alert('Помилка сервісу: ' + assistant.error_message);
@@ -206,7 +239,8 @@ let currentSessionId = null;
                         'Вибачте, сервіс повернув порожню відповідь.',
                         'assistant',
                         getCurrentTime(),
-                        'error'
+                        'error',
+                        { personalContext: personalContextEnabled }
                     );
                 }
 
@@ -221,33 +255,58 @@ let currentSessionId = null;
         }
     }
 
-    function addMessageToUI(text, sender, time, status = 'completed') {
+    function addMessageToUI(text, sender, time, status = 'completed', extra = {}) {
         const messagesContainer = document.getElementById('chatMessages');
 
         const messageDiv = document.createElement('div');
         const isUser = sender === 'user';
         messageDiv.className = `message ${sender} d-flex gap-3 align-items-start ${isUser ? 'flex-row-reverse text-end' : ''}`;
 
-        const avatarContent = isUser
-            ? `<span class="text-uppercase">${getUserInitial()}</span>`
-            : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/></svg>';
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = `message-avatar rounded-circle d-flex align-items-center justify-content-center fw-semibold ${isUser ? 'bg-primary text-white' : 'bg-success text-white'}`;
+        if (isUser) {
+            avatarDiv.textContent = getUserInitial();
+        } else {
+            avatarDiv.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987л.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/></svg>';
+        }
 
-        const messageBodyClasses = isUser
+        const messageBodyDiv = document.createElement('div');
+        messageBodyDiv.className = isUser
             ? 'message-body rounded-3 px-3 py-2 bg-primary text-white shadow-sm'
             : 'message-body rounded-3 border px-3 py-2 bg-light';
 
-        messageDiv.innerHTML = `
-            <div class="message-avatar rounded-circle d-flex align-items-center justify-content-center fw-semibold ${isUser ? 'bg-primary text-white' : 'bg-success text-white'}">
-                ${avatarContent}
-            </div>
-            <div class="${messageBodyClasses}">
-                <div>${formatMessage(text)}</div>
-                <div class="message-time">${time}</div>
-            </div>
-        `;
+        const textDiv = document.createElement('div');
+        textDiv.innerHTML = formatMessage(text);
+        messageBodyDiv.appendChild(textDiv);
+
+    const metaContainer = document.createElement('div');
+    metaContainer.className = 'message-meta-wrapper mt-2 d-flex flex-column align-items-start gap-1';
+
+    if (extra && extra.personalContext) {
+        const badge = document.createElement('div');
+        badge.className = 'message-meta badge bg-info-subtle text-info fw-semibold d-inline-flex align-items-center gap-1';
+        badge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14z"/><path d="M8 4a.905.905 0 0 1 .9.995л-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4zm0 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg><span>Персональні дані додані</span>';
+        metaContainer.appendChild(badge);
+    }
+
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'message-time';
+    timeDiv.textContent = time;
+    metaContainer.appendChild(timeDiv);
+
+    messageBodyDiv.appendChild(metaContainer);
+
+        if (isUser) {
+            messageDiv.appendChild(messageBodyDiv);
+            messageDiv.appendChild(avatarDiv);
+        } else {
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(messageBodyDiv);
+        }
 
         messagesContainer.appendChild(messageDiv);
         scrollToBottom();
+        return messageDiv;
     }
 
     function showTypingIndicator() {
@@ -303,6 +362,37 @@ let currentSessionId = null;
 
     function getUserInitial() {
         return 'В';
+    }
+
+    function applyPersonalContextBadge(messageElement, enabled) {
+        if (!messageElement) {
+            return;
+        }
+
+        const body = messageElement.querySelector('.message-body');
+        if (!body) {
+            return;
+        }
+
+        let metaContainer = body.querySelector('.message-meta-wrapper');
+        if (!metaContainer) {
+            metaContainer = document.createElement('div');
+            metaContainer.className = 'message-meta-wrapper mt-2 d-flex flex-column align-items-start gap-1';
+            body.appendChild(metaContainer);
+        }
+
+        let badge = metaContainer.querySelector('.message-meta');
+
+        if (enabled) {
+            if (!badge) {
+                badge = document.createElement('div');
+                badge.className = 'message-meta badge bg-info-subtle text-info fw-semibold d-inline-flex align-items-center gap-1';
+                badge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14z"/><path d="М8 4a.905.905 0 0 1 .9.995л-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4zm0 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg><span>Персональні дані додані</span>';
+                metaContainer.insertBefore(badge, metaContainer.firstChild);
+            }
+        } else if (badge) {
+            badge.remove();
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
