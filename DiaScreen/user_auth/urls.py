@@ -9,6 +9,7 @@ from .views import (
     logout_view,
     profile_view,
     profile_edit,
+    glucose_target_settings,
 )
 from .forms import StyledPasswordResetForm, StyledSetPasswordForm
 
@@ -20,6 +21,7 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
     path('profile/', profile_view, name='profile'),
     path('profile/edit/', profile_edit, name='profile_edit'),
+    path('profile/targets/', glucose_target_settings, name='profile_targets'),
     path(
         'password-reset/',
         auth_views.PasswordResetView.as_view(

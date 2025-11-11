@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 
@@ -168,6 +168,40 @@ def patient_card(request):
     glycemic_list = list(glycemic_qs[:10])
     anthropometry_list = list(anthropometry_qs[:10])
 
+    inactivity_warning = None
+    latest_dt = None
+    current_tz = timezone.get_current_timezone()
+
+    latest_records = [
+        glucose_qs.first(),
+        insuline_qs.first(),
+        glycemic_qs.first(),
+        anthropometry_qs.first(),
+        activity_qs.first(),
+        food_qs.first(),
+    ]
+
+    for record in latest_records:
+        if not record:
+            continue
+        if hasattr(record, 'date_of_measurement') and hasattr(record, 'time_of_measurement'):
+            combined = datetime.combine(record.date_of_measurement, record.time_of_measurement)
+        elif hasattr(record, 'date_of_measurement') and hasattr(record, 'time'):
+            combined = datetime.combine(record.date_of_measurement, record.time)
+        elif hasattr(record, 'measurement_date') and hasattr(record, 'measurement_time'):
+            combined = datetime.combine(record.measurement_date, record.measurement_time)
+        else:
+            continue
+
+        aware = timezone.make_aware(combined, current_tz)
+        if latest_dt is None or aware > latest_dt:
+            latest_dt = aware
+
+    if latest_dt is None:
+        inactivity_warning = 'Ви ще не додали жодного запису. Почніть вести картку, щоб система могла аналізувати ваш стан.'
+    elif timezone.now() - latest_dt > timedelta(days=2):
+        inactivity_warning = 'Більше двох днів без нових записів у картці. Будь ласка, оновіть дані для точнішого моніторингу.'
+
     return render(request, 'card/patient_card.html', {
         'glucose_form': glucose_form,
         'activity_form': activity_form,
@@ -190,6 +224,7 @@ def patient_card(request):
         'glycemic_latest': glycemic_qs.first(),
         'anthropometry_latest': anthropometry_qs.first(),
         'patient': patient,
+        'inactivity_warning': inactivity_warning,
     })
 
 

@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal
 from django import forms
 from django.contrib.auth.forms import (
     AuthenticationForm,
@@ -224,7 +225,6 @@ class PatientProfileForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-
     class Meta:
         model = Patient
         fields = [
@@ -291,39 +291,53 @@ class PatientProfileForm(forms.ModelForm):
             height = height / 100
         return round(height, 3)
 
-    def save(self, commit=True):
-        patient = super().save(commit=False)
 
-        if not self.user:
-            raise ValueError('User instance is required to save the patient profile.')
+class GlucoseTargetForm(forms.ModelForm):
+    target_glucose_min = forms.DecimalField(
+        label='Мінімальна ціль глюкози (ммоль/л)',
+        required=False,
+        max_digits=4,
+        decimal_places=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': '0'}),
+        help_text='Рекомендовано 4.0 ммоль/л',
+    )
+    target_glucose_max = forms.DecimalField(
+        label='Максимальна ціль глюкози (ммоль/л)',
+        required=False,
+        max_digits=4,
+        decimal_places=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'min': '0'}),
+        help_text='Рекомендовано 9.0 ммоль/л',
+    )
 
-        username = self.cleaned_data.get('username')
-        if username and self.user.username != username:
-            self.user.username = username
-            self.user.save(update_fields=['username'])
+    class Meta:
+        model = Patient
+        fields = ['target_glucose_min', 'target_glucose_max']
 
-        address = getattr(patient, 'address', None)
-        address_fields = {
-            'country': self.cleaned_data.get('address_country') or '',
-            'city': self.cleaned_data.get('address_city') or '',
-            'street': self.cleaned_data.get('address_street') or '',
-            'house_number': self.cleaned_data.get('address_house_number'),
-            'postal_code': self.cleaned_data.get('address_postal_code') or '',
-        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        patient = self.instance if self.instance and self.instance.pk else None
+        if patient:
+            if patient.target_glucose_min is not None:
+                self.fields['target_glucose_min'].initial = float(patient.target_glucose_min)
+            if patient.target_glucose_max is not None:
+                self.fields['target_glucose_max'].initial = float(patient.target_glucose_max)
 
-        if address:
-            for field, value in address_fields.items():
-                setattr(address, field, value)
-            address.save()
-        else:
-            address = Address.objects.create(**address_fields)
+    def clean(self):
+        cleaned_data = super().clean()
+        min_target = cleaned_data.get('target_glucose_min')
+        max_target = cleaned_data.get('target_glucose_max')
 
-        patient.user = self.user
-        patient.address = address
+        if min_target is not None and max_target is not None:
+            if min_target <= 0 or max_target <= 0:
+                raise ValidationError('Цільові значення глюкози повинні бути більше 0.')
+            if min_target >= max_target:
+                raise ValidationError('Мінімальне значення має бути менше за максимальне.')
 
-        if commit:
-            patient.save()
-            self.save_m2m()
+        if min_target is None and max_target is not None:
+            cleaned_data['target_glucose_min'] = Decimal('4.0')
+        if max_target is None and min_target is not None:
+            cleaned_data['target_glucose_max'] = Decimal('9.0')
 
-        return patient
+        return cleaned_data
 

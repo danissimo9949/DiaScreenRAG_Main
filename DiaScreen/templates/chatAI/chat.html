@@ -31,9 +31,13 @@
                     <div class="p-3 border-bottom bg-white">
                         <button class="btn btn-primary w-100" onclick="createNewChat()">+ Новий діалог</button>
                     </div>
-                    <div class="history-list list-group list-group-flush flex-grow-1" id="historyList">
+                    <div
+                        class="history-list list-group list-group-flush flex-grow-1"
+                        id="historyList"
+                        data-initial-session="{{ initial_session_id|default:'' }}"
+                    >
                         {% for session in sessions %}
-                        <div class="history-item list-group-item list-group-item-action border-0 border-bottom" data-session-id="{{ session.session_id }}">
+                        <div class="history-item list-group-item list-group-item-action border-0 border-bottom {% if forloop.first %}active{% endif %}" data-session-id="{{ session.session_id }}">
                             <div class="d-flex justify-content-between align-items-start gap-2">
                                 <div class="flex-grow-1" role="button" onclick="loadChat('{{ session.session_id }}')">
                                     <div class="history-item-title text-truncate" title="{{ session.summary|default:'Новий діалог' }}">{{ session.summary|default:"Новий діалог" }}</div>
@@ -76,6 +80,24 @@
                     </div>
                 </div>
                 <div class="card-footer bg-white border-top">
+                    <div class="chat-suggestions mb-3 d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm suggestion-btn"
+                            data-message="Підкажи, які показники глюкози вважаються нормальними?">
+                            Запитай про норми глюкози
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm suggestion-btn"
+                            data-message="Які рекомендації для харчування при діабеті 2 типу?">
+                            Запитай про харчування
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm suggestion-btn"
+                            data-message="Як правильно відстежувати рівень інсуліну?">
+                            Запитай про інсулін
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm suggestion-btn"
+                            data-message="Склади короткий план щоденного контролю діабету.">
+                            План контролю
+                        </button>
+                    </div>
                     <form class="chat-input d-flex flex-column flex-lg-row align-items-lg-end gap-2" id="chatForm" onsubmit="sendMessage(event)">
                         {% csrf_token %}
                         <div class="flex-grow-1 w-100">

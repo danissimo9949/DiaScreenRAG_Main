@@ -21,6 +21,83 @@
     </div>
 </div>
 
+{% if user.is_authenticated and patient_profile %}
+<div class="container mb-5">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden welcome-card">
+        <div class="row g-0 align-items-stretch">
+            <div class="col-lg-4 bg-primary text-white p-4 d-flex flex-column justify-content-between">
+                <div>
+                    <p class="text-uppercase small mb-2 text-white-50 fw-semibold">Персональний профіль</p>
+                    <h2 class="h3 fw-bold mb-2">{{ request.user.first_name|default:request.user.username }}</h2>
+                    <p class="mb-3">
+                        Тип діабету:
+                        <strong>{{ patient_profile.get_diabetes_type_display|default:"—" }}</strong>
+                    </p>
+                    <p class="mb-0 small text-white-75">
+                        Цільовий діапазон глюкози:
+                        <strong>{{ target_glucose_min|floatformat:1 }}–{{ target_glucose_max|floatformat:1 }} ммоль/л</strong>
+                    </p>
+                </div>
+                {% if daily_status %}
+                <div class="rounded-4 px-3 py-3 status-pill {{ daily_status.css_class }}">
+                    <div class="d-flex align-items-start gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="flex-shrink-0 mt-1" viewBox="0 0 16 16">
+                            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.965 0L.165 13.233A1.13 1.13 0 0 0 1.049 15h13.902a1.13 1.13 0 0 0 .884-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                        </svg>
+                        <span class="fw-semibold">{{ daily_status.message }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-8 p-4 p-lg-5 bg-white">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex flex-column gap-2">
+                            <span class="text-uppercase small text-muted fw-semibold">Останній замір глюкози</span>
+                            {% if latest_glucose %}
+                                <div class="display-6 fw-bold text-primary">{{ latest_glucose.glucose }} <span class="fs-5 fw-semibold">ммоль/л</span></div>
+                                <p class="text-muted mb-2">
+                                    {{ latest_glucose.date_of_measurement|date:"d.m.Y" }},
+                                    {{ latest_glucose.time_of_measurement|time:"H:i" }}
+                                    {% if latest_glucose.glucose_measurement_category %}
+                                        • {{ latest_glucose.glucose_measurement_category }}
+                                    {% endif %}
+                                </p>
+                            {% else %}
+                                <p class="text-muted mb-0">Ще немає даних.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex flex-column gap-2">
+                            <span class="text-uppercase small text-muted fw-semibold">Остання інʼєкція інсуліну</span>
+                            {% if latest_insuline %}
+                                <div class="display-6 fw-bold text-primary">{{ latest_insuline.insuline_dose }} <span class="fs-5 fw-semibold">ОД</span></div>
+                                <p class="text-muted mb-2">
+                                    {{ latest_insuline.date_of_measurement|date:"d.m.Y" }},
+                                    {{ latest_insuline.time|time:"H:i" }}
+                                    • {{ latest_insuline.category }}
+                                </p>
+                            {% else %}
+                                <p class="text-muted mb-0">Ще немає записів.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <a href="{% url 'card:patient_card' %}" class="btn btn-primary">
+                        Відкрити картку
+                    </a>
+                    <a href="{% url 'chat' %}" class="btn btn-outline-primary">
+                        Задати питання ШІ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="container my-5">
     <!-- Перший блок: ШІ-асистент медичний -->
     <div class="row mb-5">
@@ -43,6 +120,17 @@
                     </div>
                 </div>
                 <div class="card-body p-4 p-md-5">
+                    <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-md-end gap-3 mb-4 home-cta-wrapper">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'chat' %}" class="btn home-cta-btn home-cta-btn--primary btn-lg fw-semibold shadow-sm">
+                            Почати діалог з ШІ
+                        </a>
+                        {% else %}
+                        <a href="{% url 'login' %}?next={% url 'chat' %}" class="btn home-cta-btn home-cta-btn--primary btn-lg fw-semibold shadow-sm">
+                            Почати діалог з ШІ
+                        </a>
+                        {% endif %}
+                    </div>
                     <div class="row g-4">
                         <div class="col-md-6">
                             <div class="d-flex align-items-start mb-4">
@@ -143,6 +231,17 @@
                     </div>
                 </div>
                 <div class="card-body p-4 p-md-5">
+                    <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-md-end gap-3 mb-4 home-cta-wrapper">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'card:patient_card' %}" class="btn home-cta-btn home-cta-btn--secondary btn-lg fw-semibold shadow-sm">
+                            Відкрити картку пацієнта
+                        </a>
+                        {% else %}
+                        <a href="{% url 'login' %}?next={% url 'card:patient_card' %}" class="btn home-cta-btn home-cta-btn--secondary btn-lg fw-semibold shadow-sm">
+                            Відкрити картку пацієнта
+                        </a>
+                        {% endif %}
+                    </div>
                     <div class="row g-4">
                         <div class="col-md-6">
                             <div class="d-flex align-items-start mb-4">
@@ -258,6 +357,40 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="home-stats section bg-light py-5">
+    <div class="container">
+        <div class="row g-4 stats-overview justify-content-center">
+            <div class="col-md-6 col-xl-4">
+                <div class="stats-card stats-card--patients h-100 p-4 d-flex align-items-center gap-3">
+                    <div class="stats-icon stats-icon--primary d-flex align-items-center justify-content-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M6 8a3 3 0 1 0-2.83-4h1.09A2 2 0 1 1 8 6a2.989 2.989 0 0 1-.879 2.121A3.987 3.987 0 0 0 4 10h1a3 3 0 0 1 3-3c.565 0 1.096.156 1.553.427A4.5 4.5 0 1 1 6 15H2a4 4 0 1 1 4-7zm7 2.5a2.5 2.5 0 1 0-4.762.928A4.007 4.007 0 0 1 10 13h2a3.98 3.98 0 0 1 1-.133z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="stats-card__label mb-1">Пацієнтів в системі</p>
+                        <p class="stats-card__number mb-0">{{ patient_count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-xl-4">
+                <div class="stats-card stats-card--entries h-100 p-4 d-flex align-items-center gap-3">
+                    <div class="stats-icon stats-icon--accent d-flex align-items-center justify-content-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 0a4.5 4.5 0 0 1 4.473 4H14a2 2 0 0 1 2 2v5.5a1.5 1.5 0 0 1-3 0V10h-.5a.5.5 0 0 0 0 1H13v.5a2.5 2.5 0 0 0 5 0V6a3 3 0 0 0-3-3h-.38A4.5 4.5 0 0 1 8 0ZM4.5 6.5A4.5 4.5 0 0 1 9 2a4.5 4.5 0 0 0 0 9H9v1.5a1.5 1.5 0 0 0 3 0V10h-.5a.5.5 0 0 1 0-1H12v-.5a4.5 4.5 0 1 0-7.5-2Z"/>
+                            <path d="M7 15.5A3.5 3.5 0 0 1 3.5 12H3v1.5a1.5 1.5 0 0 1-3 0V8a2 2 0 0 1 2-2h.527a4.5 4.5 0 0 0 8.946 0H12a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 1-3 0V11h-.5a.5.5 0 0 1 0-1H11V9.5a3.5 3.5 0 0 1-7 0V10h.5a.5.5 0 0 1 0 1H4v.5a3.5 3.5 0 1 1 3 3.465Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="stats-card__label mb-1">Усього записів</p>
+                        <p class="stats-card__number mb-0">{{ total_entries }}</p>
                     </div>
                 </div>
             </div>

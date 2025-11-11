@@ -17,12 +17,15 @@ def render_chat_ai(request):
         user=request.user,
         is_active=True
     ).order_by('-updated_at')[:20]
-    
+
+    initial_session_id = sessions[0].session_id if sessions else None
+
     context = {
         'sessions': sessions,
         'support_ticket_form': SupportTicketForm(
             initial={'page_context': 'chat'}
         ),
+        'initial_session_id': initial_session_id,
     }
     return render(request, 'chatAI/chat.html', context)
 

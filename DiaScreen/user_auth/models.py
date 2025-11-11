@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
@@ -69,6 +70,22 @@ class Patient(models.Model):
     diabetes_type = models.CharField(max_length=50, choices=[('type1', 'Діабет 1-го типу'), ('type2', 'Діабет 2-го типу'), ('gestational', 'Гестаційний діабет')], null=True, blank=True)
     sex = models.CharField(max_length=10, choices=[('male', 'Чоловік'), ('female', 'Жінка')], null=True, blank=True)
     is_on_insulin = models.BooleanField(default=False)
+    target_glucose_min = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        default=Decimal('4.0'),
+        verbose_name='Мінімальна ціль глюкози (ммоль/л)',
+    )
+    target_glucose_max = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        default=Decimal('9.0'),
+        verbose_name='Максимальна ціль глюкози (ммоль/л)',
+    )
   
     def calculate_bmi(self):
         if self.weight and self.height:

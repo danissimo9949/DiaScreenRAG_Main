@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Цільові показники глюкози{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/pages/profile-edit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <h3 class="mb-1">Цільові показники глюкози</h3>
+            <p class="text-muted mb-0">Налаштуйте індивідуальний діапазон для моніторингу</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="{% url 'profile' %}">Повернутися до профілю</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-4">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="profile-edit-card bg-white p-4 p-lg-5">
+        <form method="post" class="row g-4">
+            {% csrf_token %}
+            <div class="col-12">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label" for="{{ form.target_glucose_min.id_for_label }}">Мінімум (ммоль/л)</label>
+                        {{ form.target_glucose_min }}
+                        {% if form.target_glucose_min.errors %}
+                            <div class="text-danger small">{{ form.target_glucose_min.errors|striptags }}</div>
+                        {% elif form.target_glucose_min.help_text %}
+                            <div class="text-muted small">{{ form.target_glucose_min.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label" for="{{ form.target_glucose_max.id_for_label }}">Максимум (ммоль/л)</label>
+                        {{ form.target_glucose_max }}
+                        {% if form.target_glucose_max.errors %}
+                            <div class="text-danger small">{{ form.target_glucose_max.errors|striptags }}</div>
+                        {% elif form.target_glucose_max.help_text %}
+                            <div class="text-muted small">{{ form.target_glucose_max.help_text }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="alert alert-info mb-4">
+                    За замовчуванням використовується діапазон <strong>4.0 – 9.0 ммоль/л</strong>. Налаштуйте власні значення за рекомендацією вашого лікаря.
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <a class="btn btn-outline-secondary" href="{% url 'profile' %}">Скасувати</a>
+                    <button class="btn btn-primary" type="submit">Зберегти</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

@@ -132,7 +132,9 @@ let currentSessionId = null;
     }
 
     async function sendMessage(event) {
-        event.preventDefault();
+        if (event) {
+            event.preventDefault();
+        }
 
         const input = document.getElementById('messageInput');
         const message = input.value.trim();
@@ -141,8 +143,21 @@ let currentSessionId = null;
             return;
         }
 
+        await submitMessage(message);
+
+        input.value = '';
+        input.style.height = 'auto';
+    }
+
+    async function submitMessage(rawMessage) {
+        const message = (rawMessage || '').trim();
+        if (!message) {
+            return;
+        }
+
         if (!currentSessionId) {
-            await createNewChat();
+            alert('Оберіть діалог або створіть новий перед відправкою повідомлення.');
+            return;
         }
 
         const emptyChat = document.getElementById('emptyChat');
@@ -151,8 +166,6 @@ let currentSessionId = null;
         }
 
         addMessageToUI(message, 'user', getCurrentTime());
-        input.value = '';
-        input.style.height = 'auto';
 
         showTypingIndicator();
 
@@ -291,6 +304,31 @@ let currentSessionId = null;
     function getUserInitial() {
         return 'В';
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.suggestion-btn').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const message = (button.dataset.message || '').trim();
+                if (!message) {
+                    return;
+                }
+
+                const input = document.getElementById('messageInput');
+                if (input) {
+                    input.value = '';
+                    input.style.height = 'auto';
+                }
+
+                await submitMessage(message);
+            });
+        });
+
+        const historyList = document.getElementById('historyList');
+        const initialSessionId = historyList?.dataset.initialSession;
+        if (initialSessionId) {
+            loadChat(initialSessionId);
+        }
+    });
 
     async function deleteChat(sessionId) {
         if (!confirm('Ви впевнені, що хочете видалити цей діалог?')) {

@@ -1,15 +1,118 @@
-from django.shortcuts import render, redirect
+from datetime import datetime, timedelta
+
+from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
+from django.shortcuts import redirect, render
+from django.utils import timezone
 
 from support.models import SupportTicket
+from card.models import (
+    GlucoseMeasurement,
+    InsulineDoseMeasurement,
+    GlycemicProfileMeasurement,
+)
 
-from .forms import LoginForm, UserRegistrationForm, PatientProfileForm
+from .forms import LoginForm, UserRegistrationForm, PatientProfileForm, GlucoseTargetForm
+from .models import Patient
 
 
 def home(request):
-    return render(request, 'auth/home.html')
+    patient_count = Patient.objects.count()
+    total_entries = (
+        GlucoseMeasurement.objects.count()
+        + InsulineDoseMeasurement.objects.count()
+        + GlycemicProfileMeasurement.objects.count()
+    )
+
+    latest_glucose = None
+    latest_insuline = None
+    daily_status = None
+    patient_profile = None
+    target_min_value = 4.0
+    target_max_value = 9.0
+
+    if request.user.is_authenticated:
+        patient_profile = getattr(request.user, 'profile', None)
+        if patient_profile:
+            if patient_profile.target_glucose_min is not None:
+                target_min_value = float(patient_profile.target_glucose_min)
+            if patient_profile.target_glucose_max is not None:
+                target_max_value = float(patient_profile.target_glucose_max)
+
+            latest_glucose = (
+                GlucoseMeasurement.objects.filter(patient=patient_profile)
+                .order_by('-date_of_measurement', '-time_of_measurement')
+                .first()
+            )
+            latest_insuline = (
+                InsulineDoseMeasurement.objects.filter(patient=patient_profile)
+                .order_by('-date_of_measurement', '-time')
+                .first()
+            )
+            latest_glycemic = (
+                GlycemicProfileMeasurement.objects.filter(patient=patient_profile)
+                .order_by('-measurement_date', '-measurement_time')
+                .first()
+            )
+
+            if latest_glucose:
+                glucose_value = float(latest_glucose.glucose)
+                target_min = target_min_value
+                target_max = target_max_value
+
+                status_class = 'bg-primary-subtle text-primary'
+                if target_min <= glucose_value <= target_max:
+                    daily_status = {
+                        'type': 'success',
+                        'message': 'Сьогодні рівень глюкози в межах цілі.',
+                        'css_class': 'bg-success-subtle text-success',
+                    }
+                elif glucose_value < target_min:
+                    daily_status = {
+                        'type': 'warning',
+                        'message': 'Сьогодні рівень глюкози нижчий за ціль. Будьте уважні.',
+                        'css_class': 'bg-warning-subtle text-warning',
+                    }
+                else:
+                    daily_status = {
+                        'type': 'danger',
+                        'message': 'Сьогодні рівень глюкози перевищує ціль. Перевірте свої показники.',
+                        'css_class': 'bg-danger-subtle text-danger',
+                    }
+            elif latest_glycemic:
+                avg_glucose = float(latest_glycemic.average_glucose)
+                if target_min_value <= avg_glucose <= target_max_value:
+                    daily_status = {
+                        'type': 'success',
+                        'message': 'Середня глюкоза за останній профіль у межах цілі.',
+                        'css_class': 'bg-success-subtle text-success',
+                    }
+                elif avg_glucose < target_min_value:
+                    daily_status = {
+                        'type': 'warning',
+                        'message': 'Середня глюкоза за останній профіль нижча за норму.',
+                        'css_class': 'bg-warning-subtle text-warning',
+                    }
+                else:
+                    daily_status = {
+                        'type': 'danger',
+                        'message': 'Середня глюкоза за останній профіль перевищує норму.',
+                        'css_class': 'bg-danger-subtle text-danger',
+                    }
+
+    context = {
+        'patient_count': patient_count,
+        'total_entries': total_entries,
+        'latest_glucose': latest_glucose,
+        'latest_insuline': latest_insuline,
+        'patient_profile': patient_profile,
+        'daily_status': daily_status,
+        'target_glucose_min': target_min_value,
+        'target_glucose_max': target_max_value,
+    }
+
+    return render(request, 'auth/home.html', context)
 
 
 def privacy_policy(request):
@@ -73,11 +176,49 @@ def profile_view(request):
             SupportTicket.objects.select_related("user").order_by("-created_at")[:50]
         )
 
+    last_measurement_message = None
+    if patient:
+        last_glucose = (
+            GlucoseMeasurement.objects.filter(patient=patient)
+            .order_by('-date_of_measurement', '-time_of_measurement')
+            .first()
+        )
+        last_insuline = (
+            InsulineDoseMeasurement.objects.filter(patient=patient)
+            .order_by('-date_of_measurement', '-time')
+            .first()
+        )
+
+        latest_dt = None
+        current_tz = timezone.get_current_timezone()
+
+        if last_glucose:
+            combined = datetime.combine(
+                last_glucose.date_of_measurement,
+                last_glucose.time_of_measurement,
+            )
+            latest_dt = timezone.make_aware(combined, current_tz)
+
+        if last_insuline:
+            combined = datetime.combine(
+                last_insuline.date_of_measurement,
+                last_insuline.time,
+            )
+            candidate = timezone.make_aware(combined, current_tz)
+            if latest_dt is None or candidate > latest_dt:
+                latest_dt = candidate
+
+        if latest_dt is None:
+            last_measurement_message = 'Ви ще не додали жодного заміру. Памʼятайте оновлювати дані для точнішого моніторингу.'
+        elif timezone.now() - latest_dt > timedelta(days=2):
+            last_measurement_message = 'Більше двох днів без нових замірів. Будь ласка, оновіть показники.'
+
     context = {
         'user_obj': request.user,
         'patient': patient,
         'is_support': is_support,
         'support_tickets': support_tickets,
+        'last_measurement_warning': last_measurement_message,
     }
     return render(request, 'auth/profile.html', context)
 
@@ -101,3 +242,26 @@ def profile_edit(request):
         messages.error(request, 'Виправте помилки у формі та спробуйте ще раз.')
 
     return render(request, 'auth/profile_edit.html', {'form': form})
+
+
+@login_required
+def glucose_target_settings(request):
+    patient = getattr(request.user, 'profile', None)
+
+    if patient is None:
+        messages.info(request, 'Створіть профіль пацієнта, щоб налаштувати цільові показники.')
+        return redirect('card:patient_card')
+
+    form = GlucoseTargetForm(
+        request.POST or None,
+        instance=patient,
+    )
+
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Цільовий діапазон глюкози оновлено.')
+            return redirect('profile')
+        messages.error(request, 'Перевірте введені дані.')
+
+    return render(request, 'auth/glucose_targets.html', {'form': form})
