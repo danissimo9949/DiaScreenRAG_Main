@@ -10,6 +10,9 @@ from .views import (
     profile_view,
     profile_edit,
     glucose_target_settings,
+    get_notifications,
+    mark_notification_read,
+    mark_all_notifications_read,
 )
 from .forms import StyledPasswordResetForm, StyledSetPasswordForm
 
@@ -56,4 +59,7 @@ urlpatterns = [
         ),
         name='password_reset_complete',
     ),
+    path('api/notifications/', get_notifications, name='get_notifications'),
+    path('api/notifications/<int:notification_id>/read/', mark_notification_read, name='mark_notification_read'),
+    path('api/notifications/read-all/', mark_all_notifications_read, name='mark_all_notifications_read'),
 ]

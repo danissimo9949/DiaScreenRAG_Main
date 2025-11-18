@@ -1,35 +1,25 @@
 <footer id="footer">
     <div class="container">
-        <div class="row text-light align-items-center">
-            <div class="col-md-3">
-                <h2>DiaScreen</h2>
-                <p class="fs-5">All rights reserved</p>
+        <div class="footer__content">
+            <div class="footer__brand">
+                <h3 class="footer__logo">DiaScreen</h3>
+                <p class="footer__copyright">© {% now "Y" %} DiaScreen. Всі права захищені.</p>
             </div>
-            <div class="col-md-3">
-                <h3 class="fs-4 mt-2">Навігація</h3><hr>
-                <p><a class="footer__link" href="#">Головна</a></p>
-                <p><a class="footer__link" href="#">Інформація</a></p>
-                <p><a class="footer__link" href="#">Лікарі</a></p>
-                <p><a class="footer__link" href="#">API</a></p>
-            </div>
-            <div class="col-md-3">
-                <h3 class="fs-4 mt-2">Аккаунт</h3><hr>
+            <nav class="footer__nav">
+                <a href="{% url 'home' %}" class="footer__link">Головна</a>
+                <a href="{% url 'information' %}" class="footer__link">Корисна інформація</a>
                 {% if user.is_authenticated %}
-                <p><a class="footer__link" href="#">Профіль</a></p>
+                    <a href="{% url 'profile' %}" class="footer__link">Профіль</a>
+                    {% if user.has_patient_profile %}
+                        <a href="{% url 'card:patient_card' %}" class="footer__link">Картка</a>
+                    {% endif %}
+                    <a href="{% url 'chat' %}" class="footer__link">ШІ-чат</a>
                 {% else %}
-                <p><a class="footer__link" href="#">Логін</a></p>
+                    <a href="{% url 'login' %}" class="footer__link">Увійти</a>
+                    <a href="{% url 'register' %}" class="footer__link">Реєстрація</a>
                 {% endif %}
-                <p><a class="footer__link" href="#">Реєстрація пацієнта</a></p>
-                <p><a class="footer__link" href="#">Реєстрація лікаря</a></p>
-                <p><a class="footer__link" href="#">Вийти з аккаунту</a></p>
-            </div>
-            <div class="col-md-3">
-                <h3 class="fs-4 mt-2">Додатково</h3><hr>
-                <p><a class="footer__link" href="{% url 'privacy_policy' %}">Політика конфіденційності</a></p>
-                <p><a class="footer__link" href="#">Відмова від відповідальності</a></p>
-                <p><a class="footer__link" href="#">Технічна підтримка</a></p>
-                <p><a class="footer__link" href="#">Карта сайту</a></p>
-            </div>
+                <a href="{% url 'privacy_policy' %}" class="footer__link">Політика конфіденційності</a>
+            </nav>
         </div>
     </div>
 </footer>

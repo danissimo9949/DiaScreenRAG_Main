@@ -109,35 +109,126 @@ footer{
 
 
 #footer{
-    background-color: #2D659D;
-    padding: 25px 0 25px 0;
+    background: linear-gradient(135deg, #2D659D 0%, #1e4a6f 100%);
+    padding: 40px 0 35px 0;
     clear: both;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.footer__column{
-   align-items: start;
-   text-align: left;
+.footer__content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 40px;
+}
+
+.footer__brand {
+    flex: 0 0 auto;
+}
+
+.footer__logo {
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    letter-spacing: 0.5px;
+}
+
+.footer__copyright {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.footer__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    align-items: center;
 }
 
 .footer__link{
-    font-size: 18px;
+    font-size: 14px;
     display: inline-block;
-    color: #fff; 
-    line-height: 1;
+    color: rgba(255, 255, 255, 0.85); 
     text-decoration: none; 
     cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    padding: 8px 16px;
+    position: relative;
+    font-weight: 500;
 }
-.footer__link:after {
-    background-color: #4191E1; 
+
+.footer__link:not(:last-child)::before {
+    content: '•';
+    position: absolute;
+    right: -2px;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.footer__link:hover {
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.footer__link::after {
+    background: linear-gradient(90deg, #4191E1, #5ba3f5); 
     display: block;
     content: "";
     height: 2px; 
     width: 0%;
-    -webkit-transition: width .3s ease-in-out;
-    -moz--transition: width .3s ease-in-out;
     transition: width .3s ease-in-out;
+    margin-top: 4px;
+    border-radius: 2px;
 }
-.footer__link:hover:after,
-.footer__link:focus:after {
-    width: 100%;
+
+.footer__link:hover::after,
+.footer__link:focus::after {
+    width: calc(100% - 32px);
+    margin-left: 16px;
+}
+
+@media (max-width: 768px) {
+    #footer {
+        padding: 35px 0 30px 0;
+    }
+    
+    .footer__content {
+        flex-direction: column;
+        text-align: center;
+        gap: 25px;
+    }
+    
+    .footer__brand {
+        width: 100%;
+    }
+    
+    .footer__nav {
+        justify-content: center;
+        gap: 0;
+        flex-wrap: wrap;
+    }
+    
+    .footer__link {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+    
+    .footer__link:not(:last-child)::before {
+        display: none;
+    }
+    
+    .footer__logo {
+        font-size: 22px;
+    }
+    
+    .footer__copyright {
+        font-size: 12px;
+    }
 }

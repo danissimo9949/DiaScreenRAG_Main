@@ -31,6 +31,12 @@
                         </li>
                         {% endif %}
                         {% if user.is_authenticated %}
+                        <li class="nav-item position-relative">
+                            <a class="nav-link" href="#" id="notification-icon" style="position: relative; padding: 8px 12px;">
+                                🔔
+                                <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+                            </a>
+                        </li>
                         <li class="nav-item d-flex gap-2 flex-wrap">
                               <a class="btn btn-primary header__button" href="{% url 'profile' %}">
                                   Профіль

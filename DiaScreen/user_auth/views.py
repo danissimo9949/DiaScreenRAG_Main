@@ -1,10 +1,13 @@
 from datetime import datetime, timedelta
+import json
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 
 from support.models import SupportTicket
 from card.models import (
@@ -14,7 +17,7 @@ from card.models import (
 )
 
 from .forms import LoginForm, UserRegistrationForm, PatientProfileForm, GlucoseTargetForm
-from .models import Patient
+from .models import Patient, Notification
 
 
 def home(request):
@@ -151,11 +154,24 @@ def login_view(request):
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            # Additional security check: ensure user is active
+            if not user.is_active:
+                messages.error(request, 'Цей обліковий запис неактивний.')
+                return render(request, 'auth/login-form.html', {'form': form})
+            
             login(request, user)
+            # Log successful login
+            import logging
+            logger = logging.getLogger('user_auth')
+            logger.info(f'Successful login: {user.username}')
+            
             next_url = request.GET.get('next', 'home')
-            return redirect(next_url)
+            # Security: validate next_url to prevent open redirect
+            if next_url and not next_url.startswith('http'):
+                return redirect(next_url)
+            return redirect('home')
         else:
-            messages.error(request, 'Будь ласка, виправте помилки в формі.')
+            messages.error(request, 'Неправильне ім\'я користувача або пароль.')
     else:
         form = LoginForm()
     
@@ -289,3 +305,62 @@ def glucose_target_settings(request):
         messages.error(request, 'Перевірте введені дані.')
 
     return render(request, 'auth/glucose_targets.html', {'form': form})
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_notifications(request):
+    unread_count = Notification.objects.filter(
+        user=request.user,
+        is_read=False
+    ).count()
+    
+    notifications = Notification.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:10]
+    
+    notifications_data = [
+        {
+            'id': notif.id,
+            'title': notif.title,
+            'message': notif.message,
+            'type': notif.notification_type,
+            'is_read': notif.is_read,
+            'created_at': notif.created_at.strftime('%d.%m.%Y %H:%M'),
+            'link': notif.link or '',
+        }
+        for notif in notifications
+    ]
+    
+    return JsonResponse({
+        'success': True,
+        'unread_count': unread_count,
+        'notifications': notifications_data,
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def mark_notification_read(request, notification_id):
+    try:
+        notification = Notification.objects.get(
+            id=notification_id,
+            user=request.user
+        )
+        notification.mark_as_read()
+        return JsonResponse({'success': True})
+    except Notification.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Сповіщення не знайдено'}, status=404)
+
+
+@login_required
+@require_http_methods(["POST"])
+def mark_all_notifications_read(request):
+    updated = Notification.objects.filter(
+        user=request.user,
+        is_read=False
+    ).update(
+        is_read=True,
+        read_at=timezone.now()
+    )
+    return JsonResponse({'success': True, 'updated_count': updated})

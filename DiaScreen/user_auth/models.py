@@ -126,3 +126,50 @@ class Patient(models.Model):
                 name='unique_phone_number'
             )
         ]
+
+
+class Notification(models.Model):
+    TYPE_CHOICES = [
+        ('info', 'Інформаційне'),
+        ('warning', 'Попередження'),
+        ('danger', 'Критичне'),
+        ('success', 'Успіх'),
+    ]
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        verbose_name='Користувач'
+    )
+    title = models.CharField(max_length=200, verbose_name='Заголовок')
+    message = models.TextField(verbose_name='Повідомлення')
+    notification_type = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        default='info',
+        verbose_name='Тип сповіщення'
+    )
+    is_read = models.BooleanField(default=False, verbose_name='Прочитано')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Створено')
+    read_at = models.DateTimeField(null=True, blank=True, verbose_name='Прочитано о')
+    link = models.CharField(max_length=500, blank=True, null=True, verbose_name='Посилання')
+    
+    class Meta:
+        verbose_name = 'Сповіщення'
+        verbose_name_plural = 'Сповіщення'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at', 'is_read']),
+            models.Index(fields=['user', 'is_read']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} - {self.user.username}"
+    
+    def mark_as_read(self):
+        if not self.is_read:
+            from django.utils import timezone
+            self.is_read = True
+            self.read_at = timezone.now()
+            self.save(update_fields=['is_read', 'read_at'])
