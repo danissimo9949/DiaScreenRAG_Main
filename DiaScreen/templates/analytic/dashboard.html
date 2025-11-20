@@ -18,11 +18,19 @@
                 </p>
             </div>
             <div class="d-flex flex-column align-items-end gap-2">
-                <div class="btn-group" role="group">
-                    <a href="?period=7" class="btn btn-sm {% if period == '7' %}btn-primary{% else %}btn-outline-primary{% endif %}">7 днів</a>
-                    <a href="?period=30" class="btn btn-sm {% if period == '30' %}btn-primary{% else %}btn-outline-primary{% endif %}">30 днів</a>
-                    <a href="?period=90" class="btn btn-sm {% if period == '90' %}btn-primary{% else %}btn-outline-primary{% endif %}">90 днів</a>
-                    <a href="?period=365" class="btn btn-sm {% if period == '365' %}btn-primary{% else %}btn-outline-primary{% endif %}">Рік</a>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="btn-group" role="group">
+                        <a href="?period=7" class="btn btn-sm {% if period == '7' %}btn-primary{% else %}btn-outline-primary{% endif %}">7 днів</a>
+                        <a href="?period=30" class="btn btn-sm {% if period == '30' %}btn-primary{% else %}btn-outline-primary{% endif %}">30 днів</a>
+                        <a href="?period=90" class="btn btn-sm {% if period == '90' %}btn-primary{% else %}btn-outline-primary{% endif %}">90 днів</a>
+                        <a href="?period=365" class="btn btn-sm {% if period == '365' %}btn-primary{% else %}btn-outline-primary{% endif %}">Рік</a>
+                    </div>
+                    <a href="{% url 'analytic:patient_dashboard_pdf' patient.pk %}?period={{ period }}" class="btn btn-sm btn-success">
+                        📄 Експорт PDF
+                    </a>
+                    <button type="button" class="btn btn-sm btn-info" id="analyzeDataBtn">
+                        🤖 Проаналізуй мої дані
+                    </button>
                 </div>
                 <span class="analytics-pill">
                     Період: {{ period_label }}
@@ -550,6 +558,131 @@
             showEmptyMessage('glucoseByHour', true);
         }
     })();
+</script>
+
+<div class="modal fade" id="aiAnalysisModal" tabindex="-1" aria-labelledby="aiAnalysisModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aiAnalysisModalLabel">
+                    🤖 AI Аналіз ваших даних
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="aiAnalysisLoading" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Завантаження...</span>
+                    </div>
+                    <p class="mt-3 text-muted">AI аналізує ваші дані...</p>
+                </div>
+                <div id="aiAnalysisContent" style="display: none;">
+                    <div class="alert alert-info">
+                        <strong>Період аналізу:</strong> {{ period_label }}
+                    </div>
+                    <div id="aiAnalysisText" class="p-3 bg-light rounded" style="white-space: pre-wrap; line-height: 1.6;"></div>
+                </div>
+                <div id="aiAnalysisError" class="alert alert-danger" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+                <a href="{% url 'chat' %}" class="btn btn-primary">Задати питання в чаті</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const analyzeBtn = document.getElementById('analyzeDataBtn');
+    if (!analyzeBtn) {
+        console.error('Кнопка analyzeDataBtn не знайдена');
+        return;
+    }
+    
+    const modalEl = document.getElementById('aiAnalysisModal');
+    if (!modalEl) {
+        console.error('Модальне вікно aiAnalysisModal не знайдено');
+        return;
+    }
+    
+    // Перевіряємо чи Bootstrap завантажений
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap не завантажений');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(modalEl);
+    const loadingEl = document.getElementById('aiAnalysisLoading');
+    const contentEl = document.getElementById('aiAnalysisContent');
+    const errorEl = document.getElementById('aiAnalysisError');
+    const analysisTextEl = document.getElementById('aiAnalysisText');
+    
+    analyzeBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        console.log('Кнопка натиснута');
+        
+        modal.show();
+        
+        loadingEl.style.display = 'block';
+        contentEl.style.display = 'none';
+        errorEl.style.display = 'none';
+        
+        try {
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            
+            const csrftoken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+            
+            const url = '{% url "analytic:analyze_data" patient.pk %}';
+            console.log('Відправляю запит на:', url);
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    period: '{{ period }}'
+                })
+            });
+            
+            console.log('Отримано відповідь:', response.status);
+            const data = await response.json();
+            console.log('Дані:', data);
+            
+            if (data.success) {
+                loadingEl.style.display = 'none';
+                contentEl.style.display = 'block';
+                analysisTextEl.textContent = data.analysis;
+            } else {
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.textContent = data.error || 'Помилка при аналізі даних';
+            }
+        } catch (error) {
+            console.error('Помилка:', error);
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'block';
+            errorEl.textContent = 'Помилка з\'єднання. Спробуйте пізніше.';
+        }
+    });
+    
+    console.log('Скрипт AI аналізу ініціалізовано');
+});
 </script>
 {% endblock scripts %}
 
