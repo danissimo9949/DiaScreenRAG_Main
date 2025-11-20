@@ -17,9 +17,17 @@
                     {{ patient.get_diabetes_type_display|default:'тип діабету не вказаний' }}
                 </p>
             </div>
-            <span class="analytics-pill">
-                Оновлено {% now "d.m.Y H:i" %}
-            </span>
+            <div class="d-flex flex-column align-items-end gap-2">
+                <div class="btn-group" role="group">
+                    <a href="?period=7" class="btn btn-sm {% if period == '7' %}btn-primary{% else %}btn-outline-primary{% endif %}">7 днів</a>
+                    <a href="?period=30" class="btn btn-sm {% if period == '30' %}btn-primary{% else %}btn-outline-primary{% endif %}">30 днів</a>
+                    <a href="?period=90" class="btn btn-sm {% if period == '90' %}btn-primary{% else %}btn-outline-primary{% endif %}">90 днів</a>
+                    <a href="?period=365" class="btn btn-sm {% if period == '365' %}btn-primary{% else %}btn-outline-primary{% endif %}">Рік</a>
+                </div>
+                <span class="analytics-pill">
+                    Період: {{ period_label }}
+                </span>
+            </div>
         </div>
 
         <div class="row g-4 mb-5">
@@ -94,8 +102,8 @@
             <div class="col-lg-8">
                 <div class="card analytics-card h-100">
                     <div class="card-header bg-white border-0 pb-0">
-                        <h5 class="mb-0 text-primary-emphasis">Динаміка рівня глюкози (7 днів)</h5>
-                        <p class="text-muted small mb-0">Середні значення за день</p>
+                        <h5 class="mb-0 text-primary-emphasis">Динаміка рівня глюкози</h5>
+                        <p class="text-muted small mb-0">Середні значення за день ({{ period_label }})</p>
                     </div>
                     <div class="card-body analytics-chart">
                         <canvas id="glucoseTrendChart"></canvas>
@@ -122,7 +130,21 @@
         </div>
 
         <div class="row g-4 mb-5">
-            <div class="col-lg-6">
+            <div class="col-lg-8">
+                <div class="card analytics-card h-100">
+                    <div class="card-header bg-white border-0 pb-0">
+                        <h5 class="mb-0 text-primary-emphasis">Глюкоза за часом доби</h5>
+                        <p class="text-muted small mb-0">Середні та медіанні значення по годинах</p>
+                    </div>
+                    <div class="card-body analytics-chart">
+                        <canvas id="glucoseByHourChart"></canvas>
+                        <p class="text-muted text-center small" data-chart-empty="glucoseByHour" hidden>
+                            Недостатньо даних для побудови графіка.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
                 <div class="card analytics-card h-100">
                     <div class="card-header bg-white border-0 pb-0">
                         <h5 class="mb-0 text-primary-emphasis">Категорії замірів глюкози</h5>
@@ -138,11 +160,76 @@
             </div>
         </div>
 
+        {% if advanced_metrics %}
+        <div class="row g-4 mb-5">
+            <div class="col-lg-12">
+                <div class="card analytics-card">
+                    <div class="card-header bg-white border-0 pb-0">
+                        <h5 class="mb-0 text-primary-emphasis">Розширені метрики глікемії</h5>
+                        <p class="text-muted small mb-0">Статистика за обраний період</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-3 col-sm-6">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="fs-4 fw-bold text-success mb-1">{{ advanced_metrics.tir_percent }}%</div>
+                                    <div class="text-muted small">Time in Range</div>
+                                    <div class="text-muted small">({{ patient.target_glucose_min|default:"4.0" }}-{{ patient.target_glucose_max|default:"9.0" }} ммоль/л)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="fs-4 fw-bold text-warning mb-1">{{ advanced_metrics.hypo_percent }}%</div>
+                                    <div class="text-muted small">Гіпоглікемія</div>
+                                    <div class="text-muted small">(&lt; 3.9 ммоль/л)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="fs-4 fw-bold text-danger mb-1">{{ advanced_metrics.hyper_percent }}%</div>
+                                    <div class="text-muted small">Гіперглікемія</div>
+                                    <div class="text-muted small">(&gt; 10.0 ммоль/л)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <div class="fs-4 fw-bold text-primary mb-1">{{ advanced_metrics.sd }}</div>
+                                    <div class="text-muted small">Стандартне відхилення</div>
+                                    <div class="text-muted small">CV: {{ advanced_metrics.cv }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-4 mt-2">
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                                    <span class="text-muted">Середнє значення:</span>
+                                    <strong>{{ advanced_metrics.mean }} ммоль/л</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                                    <span class="text-muted">GMI (оцінка HbA1c):</span>
+                                    <strong>{{ advanced_metrics.gmi }}%</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                                    <span class="text-muted">Критична гіпо:</span>
+                                    <strong class="text-danger">{{ advanced_metrics.critical_hypo_percent }}%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="row g-4 mb-5">
             <div class="col-lg-6">
                 <div class="card analytics-card h-100">
                     <div class="card-header bg-white border-0 pb-0">
-                        <h5 class="mb-0">Активність за останні 7 днів</h5>
+                        <h5 class="mb-0">Активність за {{ period_label|lower }}</h5>
                     </div>
                     <div class="card-body">
                         <ul class="list-group list-group-flush">
@@ -384,6 +471,83 @@
             showEmptyMessage('glucoseCategory', false);
         } else {
             showEmptyMessage('glucoseCategory', true);
+        }
+
+        const glucoseByHourEl = document.getElementById('glucoseByHourChart');
+        if (glucoseByHourEl && payload.glucoseByHour && payload.glucoseByHour.labels.length) {
+            new Chart(glucoseByHourEl, {
+                type: 'line',
+                data: {
+                    labels: payload.glucoseByHour.labels,
+                    datasets: [
+                        {
+                            label: 'Середнє значення',
+                            data: payload.glucoseByHour.means,
+                            borderColor: palette.primary,
+                            backgroundColor: palette.primarySoft,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                        },
+                        {
+                            label: 'Медіана',
+                            data: payload.glucoseByHour.medians,
+                            borderColor: palette.emerald,
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: { top: 12, right: 16, bottom: 12, left: 16 }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                precision: 1
+                            },
+                            title: {
+                                display: true,
+                                text: 'Глюкоза (ммоль/л)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Час доби'
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+            showEmptyMessage('glucoseByHour', false);
+        } else {
+            showEmptyMessage('glucoseByHour', true);
         }
     })();
 </script>
