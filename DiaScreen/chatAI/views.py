@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -8,6 +9,12 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 import json
 import requests
+
+from .utils import call_rag_api_with_retry
+
+logger = logging.getLogger(__name__)
+
+MAX_PERSONAL_CONTEXT_LENGTH = getattr(settings, 'MAX_PERSONAL_CONTEXT_LENGTH', 2000)
 
 from card.models import (
     GlucoseMeasurement,
@@ -113,7 +120,31 @@ def build_personal_context(user):
 
     if not parts:
         return "Персональні дані пацієнта не заповнені."
-    return "\n".join(parts)
+    
+    context = "\n".join(parts)
+    
+    if len(context) > MAX_PERSONAL_CONTEXT_LENGTH:
+        logger.warning(
+            f"Personal context for user {user.id} exceeded limit "
+            f"({len(context)} > {MAX_PERSONAL_CONTEXT_LENGTH} chars). Truncating."
+        )
+        lines = context.split('\n')
+        truncated_lines = []
+        current_length = 0
+        
+        for line in reversed(lines):
+            line_length = len(line) + 1
+            if current_length + line_length > MAX_PERSONAL_CONTEXT_LENGTH:
+                break
+            truncated_lines.insert(0, line)
+            current_length += line_length
+        
+        context = "\n".join(truncated_lines)
+        if len(context) < 50:
+            context = "\n".join(lines[:5])
+            logger.warning(f"Context too short after truncation, using first 5 lines")
+    
+    return context
 
 
 @login_required
@@ -223,27 +254,43 @@ def send_message(request):
         personal_context = build_personal_context(request.user) if use_personal_context else None
         mode = 'personalized' if personal_context else 'standard'
 
+        max_retries = getattr(settings, 'RAG_API_RETRY_MAX_ATTEMPTS', 3)
+        backoff_factor = getattr(settings, 'RAG_API_RETRY_BACKOFF_FACTOR', 0.5)
+        timeout = getattr(settings, 'RAG_API_TIMEOUT', 60)
+
         try:
             if personal_context:
-                response = requests.post(
+                response, error = call_rag_api_with_retry(
                     rag_personal_url,
+                    method='POST',
+                    max_retries=max_retries,
+                    backoff_factor=backoff_factor,
+                    timeout=timeout,
                     json={
                         'question': message_text,
                         'context': personal_context,
                         'mode': mode,
-                    },
-                    timeout=300
+                    }
                 )
             else:
-                response = requests.get(
+                response, error = call_rag_api_with_retry(
                     rag_url,
+                    method='GET',
+                    max_retries=max_retries,
+                    backoff_factor=backoff_factor,
+                    timeout=timeout,
                     params={
                         'question': message_text,
                         'mode': mode,
-                    },
-                    timeout=300
+                    }
                 )
-            response.raise_for_status()
+            
+            if error or response is None:
+                raise error or requests.RequestException("RAG API request failed after retries")
+            
+            if response.status_code >= 400:
+                response.raise_for_status()
+            
             data = response.json()
             answer_text = (data.get('answer') or '').strip()
             sources = data.get('sources') or []
@@ -264,7 +311,66 @@ def send_message(request):
             ai_message.metadata = metadata
             ai_message.response_time_ms = metadata.get('response_time_ms')
             ai_message.save(update_fields=['message_text', 'status', 'sources', 'metadata', 'response_time_ms'])
+            
+        except requests.Timeout as exc:
+            logger.error(f"RAG API timeout after {max_retries + 1} attempts: {exc}")
+            ai_message.message_text = (
+                'Сервіс зараз перевантажений або не відповідає. '
+                'Спробуйте перефразувати питання або зверніться пізніше.'
+            )
+            ai_message.status = 'error'
+            ai_message.error_message = f'Timeout after {max_retries + 1} attempts'
+            ai_message.metadata = {
+                'personal_context_used': use_personal_context,
+                'personal_context': personal_context,
+                'mode': mode,
+                'session_id': session.session_id,
+                'error_type': 'timeout',
+            }
+            ai_message.save(update_fields=['message_text', 'status', 'error_message', 'metadata'])
+            
+        except requests.ConnectionError as exc:
+            logger.error(f"RAG API connection error after {max_retries + 1} attempts: {exc}")
+            ai_message.message_text = (
+                'Не вдалося підключитися до сервісу. '
+                'Перевірте інтернет-з\'єднання або спробуйте пізніше.'
+            )
+            ai_message.status = 'error'
+            ai_message.error_message = f'Connection error after {max_retries + 1} attempts'
+            ai_message.metadata = {
+                'personal_context_used': use_personal_context,
+                'personal_context': personal_context,
+                'mode': mode,
+                'session_id': session.session_id,
+                'error_type': 'connection',
+            }
+            ai_message.save(update_fields=['message_text', 'status', 'error_message', 'metadata'])
+            
+        except requests.HTTPError as exc:
+            status_code = exc.response.status_code if exc.response else None
+            logger.error(f"RAG API HTTP error (status {status_code}): {exc}")
+            
+            if status_code == 429:
+                ai_message.message_text = (
+                    'Занадто багато запитів. Зачекайте хвилину перед наступним питанням.'
+                )
+            else:
+                ai_message.message_text = 'Помилка сервера. Спробуйте пізніше.'
+            
+            ai_message.status = 'error'
+            ai_message.error_message = f'HTTP {status_code}: {str(exc)}'
+            ai_message.metadata = {
+                'personal_context_used': use_personal_context,
+                'personal_context': personal_context,
+                'mode': mode,
+                'session_id': session.session_id,
+                'error_type': 'http',
+                'http_status': status_code,
+            }
+            ai_message.save(update_fields=['message_text', 'status', 'error_message', 'metadata'])
+            
         except (requests.RequestException, ValueError) as exc:
+            logger.error(f"RAG API request error: {exc}")
             ai_message.message_text = 'Вибачте, зараз я не можу відповісти. Спробуйте трохи пізніше.'
             ai_message.status = 'error'
             ai_message.error_message = str(exc)
@@ -273,6 +379,7 @@ def send_message(request):
                 'personal_context': personal_context,
                 'mode': mode,
                 'session_id': session.session_id,
+                'error_type': 'unknown',
             }
             ai_message.save(update_fields=['message_text', 'status', 'error_message', 'metadata'])
 
@@ -361,7 +468,6 @@ def delete_session(request, session_id):
     try:
         session = AISession.objects.get(pk=session_id, user=request.user)
         
-        # Помечаем сессию как неактивную вместо физического удаления
         session.is_active = False
         session.save(update_fields=['is_active'])
         

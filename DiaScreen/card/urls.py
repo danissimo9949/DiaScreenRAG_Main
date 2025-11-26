@@ -18,7 +18,6 @@ urlpatterns = [
     path('insuline/<int:pk>/edit/', views.InsulineUpdateView.as_view(), name='insuline_edit'),
     path('insuline/<int:pk>/delete/', views.InsulineDeleteView.as_view(), name='insuline_delete'),
 
-    # Navigation buttons targets
     path('doctor-report/', views.doctor_report, name='doctor_report'),
 ]
 

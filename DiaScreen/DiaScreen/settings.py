@@ -29,6 +29,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-)h!-te3)iuvevp_4pg@!dj9g^=
 RAG_API_URL = os.getenv('RAG_API_URL', "http://127.0.0.1:8001/get-response")
 RAG_PERSONAL_API_URL = os.getenv('RAG_PERSONAL_API_URL', "http://127.0.0.1:8001/get-response/personalized")
 
+MAX_PERSONAL_CONTEXT_LENGTH = int(os.getenv('MAX_PERSONAL_CONTEXT_LENGTH', '2000'))
+
+RAG_API_RETRY_MAX_ATTEMPTS = int(os.getenv('RAG_API_RETRY_MAX_ATTEMPTS', '3'))
+RAG_API_RETRY_BACKOFF_FACTOR = float(os.getenv('RAG_API_RETRY_BACKOFF_FACTOR', '0.5'))
+RAG_API_TIMEOUT = int(os.getenv('RAG_API_TIMEOUT', '60'))
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 

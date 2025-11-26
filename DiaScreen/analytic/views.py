@@ -325,7 +325,6 @@ class PatientAnalyticsPDFExportView(LoginRequiredMixin, TemplateView):
         return self.patient.user_id == user.id
 
     def get(self, request, *args, **kwargs):
-        # Получаем те же данные, что и в основном view
         period = request.GET.get('period', '7')
         today = timezone.localdate()
         
@@ -377,7 +376,6 @@ class PatientAnalyticsPDFExportView(LoginRequiredMixin, TemplateView):
                 patient=self.patient
             )
 
-        # Генерируем PDF
         font_ready = _ensure_pdf_fonts()
         font_regular = PDF_PRIMARY_FONT if font_ready else "Helvetica"
         font_bold = PDF_BOLD_FONT if font_ready else "Helvetica-Bold"
@@ -521,7 +519,6 @@ def _render_analytics_pdf(
         c.drawString(margin, y, f"{bullet} {text}")
         y -= line_height
 
-    # Заголовок
     draw_heading("Звіт аналітики пацієнта", size=17)
     full_name = patient.user.get_full_name() or patient.user.username
     draw_line(f"Пацієнт: {full_name}")
@@ -537,7 +534,6 @@ def _render_analytics_pdf(
     else:
         draw_line(f"Період: повна історія ({period_label})")
 
-    # Загальна статистика
     draw_heading("Загальна статистика", size=14)
     draw_bullet_line(f"Всього замірів глюкози: {total_glucose}")
     draw_bullet_line(f"Всього прийомів їжі: {total_food}")
@@ -545,14 +541,11 @@ def _render_analytics_pdf(
     draw_bullet_line(f"Всього інʼєкцій інсуліну: {total_insuline}")
     draw_bullet_line(f"Всього глюкозних профілів: {total_glycemic_profile}")
 
-    # Активність за період
     draw_heading("Активність за період", size=14)
     draw_bullet_line(f"Замірів глюкози: {weekly_metrics['glucose']}")
     draw_bullet_line(f"Прийомів їжі: {weekly_metrics['food']}")
     draw_bullet_line(f"Фізичних активностей: {weekly_metrics['activity']}")
     draw_bullet_line(f"Інʼєкцій інсуліну: {weekly_metrics['insuline']}")
-
-    # Середні показники
     draw_heading("Середні показники", size=14)
     draw_bullet_line(f"Середній рівень глюкози: {_format_decimal(glucose_avg, ' ммоль/л')}")
     draw_bullet_line(f"Середній HbA1c: {_format_decimal(hba1c_avg, ' %')}")

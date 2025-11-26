@@ -186,7 +186,6 @@ def register_view(request):
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Автоматично логіним користувача після реєстрації
             login(request, user)
             return redirect('home')
         else:

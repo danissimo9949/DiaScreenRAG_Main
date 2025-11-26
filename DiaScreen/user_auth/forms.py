@@ -36,7 +36,6 @@ class LoginForm(AuthenticationForm):
     
     def clean_username(self):
         username = self.cleaned_data.get('username')
-        # Більш точна перевірка на email за допомогою регулярного виразу
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if re.match(email_pattern, username):
             try:
