@@ -24,16 +24,13 @@ User = get_user_model()
 class CardViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.address = Address.objects.create()
         cls.user = User.objects.create_user(
             username="patient",
             email="patient@example.com",
             password="StrongPass123",
         )
-        cls.patient = Patient.objects.create(
-            user=cls.user,
-            address=cls.address,
-        )
+        cls.patient = Patient.objects.get(user=cls.user)
+        cls.address = cls.patient.address
         cls.type_of_activity = TypeOfActivity.objects.create(name="Біг")
 
     def setUp(self):

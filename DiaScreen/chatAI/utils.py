@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_retry_session(
-    max_retries: int = 3,
+    max_retries: int = 0,
     backoff_factor: float = 0.5,
     status_forcelist: Optional[list] = None,
     timeout: int = 60
@@ -51,7 +51,7 @@ def create_retry_session(
 def call_rag_api_with_retry(
     url: str,
     method: str = "GET",
-    max_retries: int = 3,
+    max_retries: int = 0,
     backoff_factor: float = 0.5,
     timeout: int = 60,
     **kwargs

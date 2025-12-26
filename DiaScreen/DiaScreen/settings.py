@@ -31,7 +31,7 @@ RAG_PERSONAL_API_URL = os.getenv('RAG_PERSONAL_API_URL', "http://127.0.0.1:8001/
 
 MAX_PERSONAL_CONTEXT_LENGTH = int(os.getenv('MAX_PERSONAL_CONTEXT_LENGTH', '2000'))
 
-RAG_API_RETRY_MAX_ATTEMPTS = int(os.getenv('RAG_API_RETRY_MAX_ATTEMPTS', '3'))
+RAG_API_RETRY_MAX_ATTEMPTS = int(os.getenv('RAG_API_RETRY_MAX_ATTEMPTS', '0'))
 RAG_API_RETRY_BACKOFF_FACTOR = float(os.getenv('RAG_API_RETRY_BACKOFF_FACTOR', '0.5'))
 RAG_API_TIMEOUT = int(os.getenv('RAG_API_TIMEOUT', '60'))
 
@@ -60,6 +60,10 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'user_auth.User'
 
+# Login URL configuration
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -68,8 +72,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'user_auth.middleware.RateLimitMiddleware',
-    'user_auth.middleware.SecurityLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'DiaScreen.urls'
